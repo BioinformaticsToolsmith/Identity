@@ -16,6 +16,7 @@ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
 
 Please cite the following paper: 
+
 	Identity: Rapid alignment-free prediction of sequence alignment identity scores using
 	self-supervised general linear models. Hani Z. Girgis, Benjamin T. James, and Brian B.
 	Luczak. NAR GAB, 2020.
@@ -30,14 +31,18 @@ List of parameters:
 	
 	-q: Optional. Query file in FASTA format. If no query(s) is provided, all versus all is
 	    performed on the database file.
+	    
 	-c: Optional. Number of cores or hyperthreads. For the search mode, set this parameter to the
 	    number of cores not hyperthreads. For example, suppose your computer has 4 cores, each of
 	    which supports 2 hyperthreads. Set this parameter to 4 if you are using the search mode or
 	    to 8 if you are using the all-versus-all mode. By default, all hyperthreads are used.
+	    
 	-r: Optional. Automatically relax the threshold according to the predictor error -- y (yes) or
 	    n (no). By default, it is enabled except if the threshold is 0.9 or higher.
+	    
 	-l: Optional. Print academic license (Affero General Public License version 1) and exit -- y
 	    (yes) or n (no).
+	    
 	-h: Optional. Print this help message.
 
 Examples: 
