@@ -25,7 +25,7 @@ List of parameters:
 
 	-d: Required. Database file in FASTA format.
 	
-	-o: Required. Output file.
+	-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score).
 	
 	-t: Required. Identity score threshold (between 0 & 0.99), below which pairs are not reported.
 	
