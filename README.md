@@ -21,9 +21,13 @@ Please cite the following paper:
 	Luczak. NAR GAB, 2020.
 
 List of parameters:
+
 	-d: Required. Database file in FASTA format.
+	
 	-o: Required. Output file.
+	
 	-t: Required. Identity score threshold (between 0 & 0.99), below which pairs are not reported.
+	
 	-q: Optional. Query file in FASTA format. If no query(s) is provided, all versus all is
 	    performed on the database file.
 	-c: Optional. Number of cores or hyperthreads. For the search mode, set this parameter to the
@@ -37,6 +41,7 @@ List of parameters:
 	-h: Optional. Print this help message.
 
 Examples: 
+
 	1. To perform database search with a minimum identity score of 0.7
 		identity -d databas.fasta -q query.fasta -o output.txt -t 0.7
 
