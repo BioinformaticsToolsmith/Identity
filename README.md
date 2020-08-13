@@ -81,6 +81,6 @@ Examples:
 		
 Hierarchical clustering:
 
-	To utilize the all-versus-all identity scores in hierarchical clustering see the README file under
-	the py directory.
+	To utilize the all-versus-all identity scores in hierarchical clustering see the README file 
+	under the py directory.
 
