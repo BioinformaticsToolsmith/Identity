@@ -78,3 +78,9 @@ Examples:
 
 	5. To print the academic lincense
 		identity -l y
+		
+Hierarchical clustering:
+
+	To utilize the all-versus-all identity scores in hierarchical clustering see the README file under
+	the py directory.
+
