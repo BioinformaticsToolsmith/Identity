@@ -22,16 +22,19 @@ Please cite the following paper:
 	Luczak. NAR GAB, 2020.
 
 Requirments:
+
 	GNU g++ 7.5.0 or later
 	You may change the compiler in the CMakeLists.txt: set(CMAKE_CXX_COMPILER g++-7)
 
 To Compile:
+
 	mkdir bin
 	cd bin
 	cmake ..
 	make
 
 To Test:
+
 	cd test
 	../bin/identity -d keratin_small.fasta -q keratin_query.fasta -o output.txt -t 0.7
 
