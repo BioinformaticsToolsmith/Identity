@@ -1,8 +1,14 @@
 cmake_minimum_required (VERSION 3.10)
-
-set(CMAKE_CXX_COMPILER g++-7)
-
 project (identity)
+
+# Credit: https://stackoverflow.com/questions/52180281/cmake-cxx-compiler-version-is-pointing-to-the-old-gcc-version
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.5)
+        message(FATAL_ERROR "GNU g++ 7.5.0 or later is required. Your current compiler version is: " ${CMAKE_CXX_COMPILER_VERSION})
+    endif()  
+else()
+    message(FATAL_ERROR "Your compiler is currently unsupported: " ${CMAKE_CXX_COMPILER_ID})
+endif()
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
@@ -44,6 +50,4 @@ ${CMAKE_SOURCE_DIR}/src/AlignerParallel.h
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_FLAGS " -O3 -ffast-math -fopenmp -fmessage-length=0")
-
 add_executable(identity ${CMAKE_SOURCE_DIR}/src/Identity.cpp ${SOURCES} ${HEADER_FILES})
-
