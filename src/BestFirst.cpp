@@ -70,7 +70,7 @@ BestFirst<T>::BestFirst(const Matrix &f, const Matrix &l,
 
 		// Step 6
 		int childNum = eList.size();
-		double resultList[childNum] { 0.0 };
+		std::vector<double> resultList(childNum, 0.0);
 #pragma omp parallel for schedule(static) num_threads(threadNum)
 		for (int i = 0; i < childNum; i++) {
 			Node child = eList[i];
