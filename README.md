@@ -27,13 +27,13 @@ Requirments:
 
 To Compile:
 
-	> mkdir bin
-	> cd bin
-	(if your default compiler meets the version requiremet) 
-	> cmake ..
-	(if you would like to specify a different compiler that meets the requirement)
- 	> cmake .. -DCMAKE_CXX_COMPILER=your_compiler_name_for_example_g++-7
-	> make
+	mkdir bin
+	cd bin
+	(If your default compiler meets the version requiremet) 
+	cmake ..
+	(Or if you would like to specify a different compiler that meets the requirement)
+ 	cmake .. -DCMAKE_CXX_COMPILER=your_compiler_name_for_example_g++-7
+	make
 
 To Test:
 
