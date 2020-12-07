@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * Statistician.cpp
@@ -35,8 +35,8 @@ double (Statistician<V>::*Statistician<V>::methodList[Stat::ALL_NUM])() = {
 	&Statistician < V > ::braycurtisDistance,
 	&Statistician < V > ::squaredChordDistance,
 	&Statistician < V > ::hellingerDistance,
-	&Statistician < V> ::cumulativeDiffDistance,
-	&Statistician < V > ::emdDistance,
+	//&Statistician < V> ::cumulativeDiffDistance,
+	//&Statistician < V > ::emdDistance,
 	&Statistician < V> ::klConditionalDistance,
 	&Statistician < V > ::kDivergenceDistance,
 	&Statistician < V > ::jeffreyDivergenceDistance,
@@ -51,7 +51,7 @@ double (Statistician<V>::*Statistician<V>::methodList[Stat::ALL_NUM])() = {
 	&Statistician < V > ::simRatioSimilarity,
 	&Statistician < V > ::markovRSimilarity,
 	&Statistician < V > ::simMMSimilarity,
-	&Statistician < V > ::lengthRatioSimilarity,
+	//&Statistician < V > ::lengthRatioSimilarity,
 	&Statistician < V > ::d2sRSimilarity,
 	&Statistician < V > ::d2starSimilarity
 };
@@ -69,7 +69,8 @@ Statistician<V>::Statistician(int histogramSizeIn, int kIn, const V *h1In,
 	mean2 = mean(h2);
 
 	if (Util::isEqual(mean1, 0.0) || Util::isEqual(mean2, 0.0)) {
-		std::cerr << "Mean 1 (mean1) and Mean 2 (mean2) cannot be zeros.";
+		std::cerr << "Mean 1 (mean1) and Mean 2 (mean2) cannot be zeros. ";
+		std::cerr << "Mean 1 is: " << mean1 << ", mean 2 is: " << mean2 << std::endl;
 		std::cerr << std::endl;
 		throw std::exception();
 	}
@@ -196,6 +197,11 @@ double Statistician<V>::cosineDistanceHelper(const V *v1, const V *v2) {
 	if (Util::isEqual(n1, 0.0) || Util::isEqual(n2, 0.0)) {
 		std::cerr << "Error at Cosine Distance. ";
 		std::cerr << "Vector norm (n1 or n2) is zero." << std::endl;
+
+		for (int i = 0; i < histogramSize; i++) {
+			std::cerr << v1[i] << "\t" << v2[i] << std::endl;
+		}
+
 		throw std::exception();
 	}
 

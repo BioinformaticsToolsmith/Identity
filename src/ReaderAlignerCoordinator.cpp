@@ -23,12 +23,13 @@
 #include "ReaderAlignerCoordinator.h"
 
 ReaderAlignerCoordinator::ReaderAlignerCoordinator(int workerNumIn,
-		int blockSizeIn, char m, double t, bool r) {
+		int blockSizeIn, char m, double t, bool r, bool a) {
 	workerNum = workerNumIn;
 	blockSize = blockSizeIn;
 	mode = m;
 	threshold = t;
 	canRelax = r;
+	canReportAll = a;
 }
 
 ReaderAlignerCoordinator::~ReaderAlignerCoordinator() {
@@ -124,7 +125,7 @@ void ReaderAlignerCoordinator::helper(string fileDb, string fileQry,
 			<< std::endl;
 
 	FastaReader qryReader(fileQry, blockSize);
-	AlignerParallel<V> aligner(k, hSize, threshold, error, true,
+	AlignerParallel<V> aligner(k, hSize, threshold, error, canReportAll,
 			g->getCompositionList(), t, dlm, workerNum, fileOut);
 	if (isAllVsAll) {
 		// Process the first block versus itself.
@@ -345,7 +346,7 @@ void ReaderAlignerCoordinator::alignFileVsFile2(string fileDb, string fileQry,
 		vector<future<std::pair<bool, stringstream*> > > futureList;
 		futureList.reserve(workerNum);
 		for (int i = 0; i < workerNum; i++) {
-			Aligner *aligner = new Aligner(g, t, dbBlock, dlm, true, threshold,
+			Aligner *aligner = new Aligner(g, t, dbBlock, dlm, canReportAll, threshold,
 					error, keyList);
 			alignerList.push_back(aligner);
 			futureList.push_back(

@@ -59,7 +59,7 @@ private:
 	int featNum;
 	int singleFeatNum;
 
-	bool isLengthFilter;
+	bool canReportAll;
 	double threshold;
 	double relaxThreshold;
 

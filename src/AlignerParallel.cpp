@@ -31,7 +31,7 @@ AlignerParallel<V>::AlignerParallel(int kmer, int hSize, double t,
 	threshold = t;
 	// error = e;
 	relaxThreshold = t - e;
-	isLengthFilter = f;
+	canReportAll = f;
 	compositionList = compList;
 	dlm = d;
 	threadNum = tNum;
@@ -128,16 +128,18 @@ void AlignerParallel<V>::setBlockA(Block *block, bool isAllVsAll) {
 					((sizeA - i - 1) / threadNum) + 1);
 
 #pragma omp parallel for schedule(static) num_threads(threadNum)
-			for (int j = i + 1; j < sizeA - 1; j++) {
-				double minimum = lenList[i];
-				double maximum = lenList[j];
-				if (maximum < minimum) {
-					minimum = lenList[j];
-					maximum = lenList[i];
-				}
+			for (int j = i + 1; j < sizeA; j++) {
 
-				if (isLengthFilter && (minimum / maximum < threshold)) {
-					continue;
+				if (!canReportAll) {
+					double minimum = lenList[i];
+					double maximum = lenList[j];
+					if (maximum < minimum) {
+						minimum = lenList[j];
+						maximum = lenList[i];
+					}
+					if ((minimum / maximum < threshold)) {
+						continue;
+					}
 				}
 
 				Statistician < V
@@ -148,7 +150,7 @@ void AlignerParallel<V>::setBlockA(Block *block, bool isAllVsAll) {
 				s.calculate(funIndexArray, singleFeatNum, data);
 				double res = predictor.calculateIdentity(data);
 
-				if (res >= relaxThreshold) {
+				if (canReportAll || res >= relaxThreshold) {
 					printList->at(omp_get_thread_num())->push_back(
 							std::make_pair(infoList[j], res));
 				}
@@ -239,7 +241,7 @@ void AlignerParallel<V>::output(
 				res = 0.0;
 			}
 
-			out << *info1 << dlm << *p.first << dlm << std::setprecision(4)
+			out << *info1 << dlm << *p.first << dlm << std::setprecision(8)
 					<< res << std::endl;
 		}
 		delete v;
@@ -266,15 +268,16 @@ void AlignerParallel<V>::processBlockB(Block *block) {
 #pragma omp parallel for schedule(static) num_threads(threadNum)
 		for (int h = 0; h < sizeB; h++) {
 
-			double minimum = lenList[i];
-			double maximum = lenListB[h];
-			if (maximum < minimum) {
-				minimum = lenListB[h];
-				maximum = lenList[i];
-			}
-
-			if (isLengthFilter && (minimum / maximum < threshold)) {
-				continue;
+			if (!canReportAll) {
+				double minimum = lenList[i];
+				double maximum = lenListB[h];
+				if (maximum < minimum) {
+					minimum = lenListB[h];
+					maximum = lenList[i];
+				}
+				if ((minimum / maximum < threshold)) {
+					continue;
+				}
 			}
 
 			Statistician < V
@@ -285,7 +288,7 @@ void AlignerParallel<V>::processBlockB(Block *block) {
 			s.calculate(funIndexArray, singleFeatNum, data);
 			double res = predictor.calculateIdentity(data);
 
-			if (res >= relaxThreshold) {
+			if (canReportAll || res >= relaxThreshold) {
 				printList->at(omp_get_thread_num())->push_back(
 						std::make_pair(infoListB[h], res));
 			}
@@ -309,7 +312,7 @@ void AlignerParallel<V>::processBlockB(Block *block) {
 		}
 	}
 
-	// Wait for the last print case
+// Wait for the last print case
 	if (printTask.valid()) {
 		printTask.get();
 		threadNum++;

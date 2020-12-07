@@ -55,6 +55,9 @@ private:
 	static int K_RELAX;
 	static void checkMutPerTemp();
 
+	static double TRANSLOCATION_FACTOR;
+	static double INVERSION_FACTOR;
+
 public:
 	static const int DNA = 0;
 	static const int PROTEIN = 1;
@@ -98,7 +101,7 @@ public:
 	static void setMutMaxBlockSize(int);
 
 	static int getKRelax();
-	void setKRelax(int);
+	static void setKRelax(int);
 
 	// Parameters controlling training
 	static int getMinFeatNum();
@@ -110,6 +113,9 @@ public:
 	static void setDeltaC(double deltaC);
 	static double getDeltaR();
 	static void setDeltaR(double deltaR);
+
+	static double getTranslocationFactor();
+	static double getInversionFactor();
 };
 
 #endif /* PARAMETERS_H_ */

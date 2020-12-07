@@ -107,7 +107,7 @@ TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
 int main(int argc, char *argv[]) {
 	std::cout << std::endl;
-	std::cout << "Identity 1.0 is developed by Hani Z. Girgis, PhD."
+	std::cout << "Identity 1.1 is developed by Hani Z. Girgis, PhD."
 			<< std::endl;
 	std::cout << std::endl;
 	std::cout
@@ -145,7 +145,6 @@ int main(int argc, char *argv[]) {
 
 	std::cout << std::endl;
 
-
 	if (argc == 1 || (argc == 2 && argv[1][1] == 'h')) {
 		std::cout << "List of parameters:" << std::endl;
 		// Required parameters
@@ -155,10 +154,24 @@ int main(int argc, char *argv[]) {
 				<< "\t-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score)."
 				<< std::endl;
 		std::cout
-				<< "\t-t: Required. Identity score threshold (between 0 & 0.99), below which pairs are not reported."
+				<< "\t-t: Required. Threshold identity score (between 0 & 0.99), below which pairs are not reported."
 				<< std::endl;
 
 		// Optional parameters
+		std::cout
+				<< "\t-a: Optional. Report identity scores for all pairs including those below the threshold -- y"
+				<< std::endl;
+		std::cout
+				<< "\t    (yes) or n (no). If yes, it may take long time on large datasets due to writing to a file."
+				<< std::endl;
+
+		std::cout
+				<< "\t    This option should be used if you desire constructing a phylogenetic tree. You may use the"
+				<< std::endl;
+		std::cout
+				<< "\t    accompanying Python program to covert Identity's output to a Phylip distance matrix."
+				<< std::endl;
+
 		std::cout
 				<< "\t-q: Optional. Query file in FASTA format. If no query(s) is provided, all versus all is"
 				<< std::endl;
@@ -191,7 +204,6 @@ int main(int argc, char *argv[]) {
 
 		std::cout << std::endl;
 
-
 		std::cout << "Examples: " << std::endl;
 		std::cout
 				<< "\t1. To perform database search with a minimum identity score of 0.7"
@@ -223,7 +235,14 @@ int main(int argc, char *argv[]) {
 				<< std::endl;
 		std::cout << std::endl;
 
-		std::cout << "\t5. To print the academic lincense" << std::endl;
+		std::cout
+				<< "\t5. To perform all versus all with a minimum identity score of 0.8 and report all pairs"
+				<< std::endl;
+		std::cout << "\t\tidentity -d databas.fasta -o output.txt -t 0.8 -a y"
+				<< std::endl;
+		std::cout << std::endl;
+
+		std::cout << "\t6. To print the academic lincense" << std::endl;
 		std::cout << "\t\tidentity -l y" << std::endl;
 		std::cout << std::endl;
 
@@ -237,6 +256,7 @@ int main(int argc, char *argv[]) {
 	char relax = 'y';
 	bool relaxUserInit = false;
 	char license = 'n';
+	char all = 'n';
 	int cores = std::thread::hardware_concurrency();
 	double threshold = -1.0;
 
@@ -277,6 +297,11 @@ int main(int argc, char *argv[]) {
 		}
 			break;
 
+		case 'a': {
+			all = argv[i + 1][0];
+		}
+			break;
+
 		default: {
 			std::cerr << argv[i][1]
 					<< " is invalid option. Rerun with -h to see the help message.";
@@ -295,6 +320,16 @@ int main(int argc, char *argv[]) {
 	} else {
 		std::cerr
 				<< "Error: If you would like to print the academic license use -l y, otherwise -l n.";
+		std::cerr << std::endl;
+		std::cerr << "\tRerun with -h to see the help message.";
+		std::cerr << std::endl;
+		std::cerr << std::endl;
+		exit(1);
+	}
+
+	if (all != 'y' && all != 'n') {
+		std::cerr
+				<< "Error: If you would like to print the scores of all pairs use -a y, otherwise -a n.";
 		std::cerr << std::endl;
 		std::cerr << "\tRerun with -h to see the help message.";
 		std::cerr << std::endl;
@@ -332,7 +367,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (cores < 2) {
-		std::cerr << "Error: Please provide a number of cores/threads >= 2 (-c 2).";
+		std::cerr
+				<< "Error: Please provide a number of cores/threads >= 2 (-c 2).";
 		std::cerr << std::endl;
 		std::cerr << "\tRerun with -h to see the help message.";
 		std::cerr << std::endl;
@@ -361,7 +397,8 @@ int main(int argc, char *argv[]) {
 	std::cout << "Output file: " << outFile << std::endl;
 	std::cout << "Cores: " << cores << std::endl;
 	std::cout << "Threshold: " << threshold << std::endl;
-	std::cout << "Automatically relax threshold: " << (relax == 'y'? "Yes" : "No") << std::endl;
+	std::cout << "Automatically relax threshold: "
+			<< (relax == 'y' ? "Yes" : "No") << std::endl;
 	std::cout << "All vs. all: " << (qryFile.empty() ? "Yes" : "No");
 	std::cout << std::endl << std::endl;
 
@@ -371,7 +408,7 @@ int main(int argc, char *argv[]) {
 
 	char mode = 'r';
 	ReaderAlignerCoordinator coordinator(cores, blockSize, mode, threshold,
-			relax == 'y' ? true : false);
+			relax == 'y' ? true : false, all == 'y' ? true : false);
 	if (qryFile.empty()) {
 		coordinator.alignAllVsAll(dbFile, outFile, "\t");
 	} else {
@@ -379,8 +416,12 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Finished." << std::endl;
 	std::cout << std::endl;
-	std::cout << "Thanks for using Identity. Please post any questions or problems on GitHub: " << std::endl;
-	std::cout << "https://github.com/BioinformaticsToolsmith/Identity or email Dr. Hani Z. Girgis." << std::endl;
+	std::cout
+			<< "Thanks for using Identity. Please post any questions or problems on GitHub: "
+			<< std::endl;
+	std::cout
+			<< "https://github.com/BioinformaticsToolsmith/Identity or email Dr. Hani Z. Girgis."
+			<< std::endl;
 	std::cout << std::endl;
 	return 0;
 }

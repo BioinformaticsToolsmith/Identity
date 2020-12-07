@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * GLMClassifier.cpp
@@ -23,8 +23,9 @@
 #include "GLMClassifier.h"
 
 GLMClassifier::GLMClassifier(const Matrix *f, const Matrix *l, double t, int c,
-		int m) :
-		fModelTable(f), lModelTable(l), threshold(t), threadNum(c), minFeat(m) {
+		int m, double b) :
+		fModelTable(f), lModelTable(l), threshold(t), threadNum(c), minFeat(m), balance(
+				b) {
 	pipe = new std::vector<ITransformer*>();
 
 	auto info = StatisticInfo::getInstance();
@@ -110,16 +111,23 @@ void GLMClassifier::prepareData() {
 	int i = 0; // Index in model table
 
 	int s = std::min(numPstv, numNgtv);
-	int trainList[s]; // Array holding training indexes
-	int validateList[s]; // Array holding validation indexes
+	int pstvS = s;
+	int ngtvS = balance * s;
+	if (ngtvS > numNgtv) {
+		ngtvS = numNgtv;
+	}
+
+	int tableS = (pstvS + ngtvS) / 2;
+	int trainList[tableS]; // Array holding training indexes
+	int validateList[tableS]; // Array holding validation indexes
 
 	// Label matrices
-	lTrainTable = new Matrix(s, 1, 1.0);
-	lValidateTable = new Matrix(s, 1, 1.0);
+	lTrainTable = new Matrix(tableS, 1, 1.0);
+	lValidateTable = new Matrix(tableS, 1, 1.0);
 
-	while (p < s || n < s) {
+	while (p < pstvS || n < ngtvS) {
 		double id = lModelTable->at(i, 0);
-		if (id >= threshold && p < s) {
+		if (id >= threshold && p < pstvS) {
 			if (p % 2 == 0) {
 				//lTrainTable->at(t, 0) = id;
 				trainList[t] = i;
@@ -130,7 +138,7 @@ void GLMClassifier::prepareData() {
 				v++;
 			}
 			p++;
-		} else if (id < threshold && n < s) {
+		} else if (id < threshold && n < ngtvS) {
 			if (n % 2 == 0) {
 				lTrainTable->at(t, 0) = 0.0;
 				//lTrainTable->at(t, 0) = id;
@@ -148,8 +156,8 @@ void GLMClassifier::prepareData() {
 	}
 
 	// Feature matrices
-	fTrainTable = fModelTable->subMatrix(trainList, s);
-	fValidateTable = fModelTable->subMatrix(validateList, s);
+	fTrainTable = fModelTable->subMatrix(trainList, tableS);
+	fValidateTable = fModelTable->subMatrix(validateList, tableS);
 
 	std::cout << "\tSimilar pair count: " << p << std::endl;
 	std::cout << "\tDissimilar pair count: " << n << std::endl;
@@ -217,8 +225,12 @@ void GLMClassifier::train() {
 	clean(f3);
 
 	auto p5 = selectFeatures(t4, f4);
+
+	// auto p5 = selectFeatures(t2, f2); // No squared or paired statistics
+
 	auto t5 = p5.first;
 	f5 = p5.second;
+	// clean(f2); // No squared or paired statistics
 	clean(f4);
 
 	auto p6 = trainGLM(t5);

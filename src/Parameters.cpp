@@ -36,6 +36,7 @@ bool Parameters::IS_INVERSTION = false;
 int Parameters::MIN_BLOCK_SIZE = 2;
 int Parameters::MAX_BLOCK_SIZE = 5;
 int Parameters::BLOCK_SIZE = 1000;
+//int Parameters::BLOCK_SIZE = 30;
 int Parameters::K_RELAX = 2;
 
 // These are not used
@@ -44,12 +45,23 @@ int Parameters::MAX_FEAT_NUM = 5;
 double Parameters::DELTA_R = 0.00025;
 double Parameters::DELTA_C = 0.001;
 
+double Parameters::TRANSLOCATION_FACTOR = 1.0;
+double Parameters::INVERSION_FACTOR = 1.0;
+
 Parameters::Parameters() {
 	checkMutPerTemp();
 	checkMinId();
 }
 
 Parameters::~Parameters() {
+}
+
+double Parameters::getTranslocationFactor(){
+	return TRANSLOCATION_FACTOR;
+}
+
+double Parameters::getInversionFactor() {
+	return INVERSION_FACTOR;
 }
 
 int Parameters::getMode() {

@@ -70,6 +70,8 @@ FastaReader::FastaReader(std::string fileNameIn, int blockSizeIn,
 	codeMap['B'] = 'T';
 	codeMap['V'] = 'A';
 	codeMap['D'] = 'T';
+	// Added on 11/19/2020 to enable reading multi-sequence alignments
+	codeMap['-'] = '-';
 }
 
 FastaReader::~FastaReader() {

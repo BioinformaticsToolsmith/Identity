@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * Mutator.cpp
@@ -27,8 +27,8 @@
 /**
  * The composition list is constructed from the input sequence
  */
-Mutator::Mutator(const string *oSequenceIn,  int maxBlockIn,
-		int seed, int minBlockIn) {
+Mutator::Mutator(const string *oSequenceIn, int maxBlockIn, int seed,
+		int minBlockIn) {
 	oSequence = oSequenceIn;
 	makeCompositionList();
 	help(maxBlockIn, seed, minBlockIn);
@@ -37,8 +37,8 @@ Mutator::Mutator(const string *oSequenceIn,  int maxBlockIn,
 /**
  * The composition list is provided by the client
  */
-Mutator::Mutator(const string *oSequenceIn, int maxBlockIn,
-		int seed, vector<double> *compositionListIn, int minBlockIn) {
+Mutator::Mutator(const string *oSequenceIn, int maxBlockIn, int seed,
+		vector<double> *compositionListIn, int minBlockIn) {
 	oSequence = oSequenceIn;
 	compositionList = compositionListIn;
 	ownCompositionList = false;
@@ -59,12 +59,17 @@ void Mutator::help(int maxBlockIn, int seed, int minBlockIn) {
 		throw std::exception();
 	}
 
-	if(minBlockIn > maxBlockIn){
-		cerr << "The minimum block size cannot be greater than its maximum." << endl;
-		cerr << "Minimum size: " << minBlockIn << ", maximum size: " << maxBlockIn << endl;
+	if (minBlockIn > maxBlockIn) {
+		cerr << "The minimum block size cannot be greater than its maximum."
+				<< endl;
+		cerr << "Minimum size: " << minBlockIn << ", maximum size: "
+				<< maxBlockIn << endl;
 		throw std::exception();
 	}
 	// End pre-conditions
+
+	inversionFactor = Parameters::getInversionFactor();
+	translocationFactor = Parameters::getTranslocationFactor();
 
 	// Segment coordinates are inclusive [s,e]
 	// This peace of code is duplicated in KmerHistogram
@@ -93,7 +98,7 @@ void Mutator::help(int maxBlockIn, int seed, int minBlockIn) {
 	// Effective length is the number of valid nucleotides or a.a.
 	for (auto p : *segmentList) {
 		// cout << "Segment: " << p.first << " " << p.second << endl;
-		effectiveLength+= p.second - p.first + 1;
+		effectiveLength += p.second - p.first + 1;
 	}
 
 	minBlock = minBlockIn;
@@ -128,15 +133,15 @@ void Mutator::makeCompositionList() {
 		switch (oSequence->at(i)) {
 		case 'A':
 		case 'a':
-			compositionList->at(0)++;break;
-		case 'C':
-		case 'c':
+			compositionList->at(0)++;break
+;			case 'C':
+			case 'c':
 			compositionList->at(1)++; break;
-		case 'G':
-		case 'g':
+			case 'G':
+			case 'g':
 			compositionList->at(2)++; break;
-		case 'T':
-		case 't':
+			case 'T':
+			case 't':
 			compositionList->at(3)++; break;
 		}
 	}
@@ -242,7 +247,7 @@ pair<string*, double> Mutator::mutateSequence(double mutationRate) {
 	// End of pre-conditions
 
 	int mutationTotal = round(mutationRate * oSequence->length());
-	if(mutationTotal > effectiveLength){
+	if (mutationTotal > effectiveLength) {
 		mutationTotal = effectiveLength;
 	}
 
@@ -289,10 +294,10 @@ pair<string*, double> Mutator::mutateSequence(double mutationRate) {
 		int segNum = segmentList->size();
 
 		int skipped = 0;
-		for (int i = 0; i-skipped < mutationTotal;) {
+		for (int i = 0; i - skipped < mutationTotal;) {
 			int index = i * interval;
 			// It got to the end of a sequence, but it did not use up all available mutations.
-			if(index >= oLength){
+			if (index >= oLength) {
 				break;
 			}
 
@@ -305,13 +310,15 @@ pair<string*, double> Mutator::mutateSequence(double mutationRate) {
 				skipped++;
 			}
 			// If no valid index found
-			if(index >= oLength || oSequence->at(index) == unknown){
-				mSequence->append(oSequence->substr(oldIndex, oLength - oldIndex));
+			if (index >= oLength || oSequence->at(index) == unknown) {
+				mSequence->append(
+						oSequence->substr(oldIndex, oLength - oldIndex));
 				break;
 			}
 			// If some indexes are skipped, copy the in-between region
 			if (index != oldIndex) {
-				mSequence->append(oSequence->substr(oldIndex, index - oldIndex));
+				mSequence->append(
+						oSequence->substr(oldIndex, index - oldIndex));
 			}
 			// Find the correct segment. The end is needed to limit the
 			// random block size.
@@ -322,7 +329,7 @@ pair<string*, double> Mutator::mutateSequence(double mutationRate) {
 				segEnd = seg.second;
 			}
 			// Test condition
-			if(!(index >= segStart && index <= segEnd)){
+			if (!(index >= segStart && index <= segEnd)) {
 				cerr << "Index not in segment" << endl;
 				throw std::exception();
 			}
@@ -369,8 +376,9 @@ pair<string*, double> Mutator::mutateSequence(double mutationRate) {
 				nextIndex = oLength;
 			}
 
-			if(nextIndex < index){
-				std::cerr << "Error in Mutator: The next index cannot be less than the current index.";
+			if (nextIndex < index) {
+				std::cerr
+						<< "Error in Mutator: The next index cannot be less than the current index.";
 				std::cerr << std::endl;
 				throw std::exception();
 			}
@@ -470,7 +478,7 @@ pair<string*, double> Mutator::mutateSequence(double mutationRate) {
 					}
 				}
 				// Decrement by 50% of the mismatches
-				matchNum -= round(misMatch / 2.0);
+				matchNum -= round(misMatch * inversionFactor);
 			}
 				break;
 			case Mutation::TRANSLOCATION: {
@@ -493,7 +501,7 @@ pair<string*, double> Mutator::mutateSequence(double mutationRate) {
 				// a block reduces the number of matches. Therefore, this effect needs to
 				// be undone. One way is to undo it completely, but that would be unrealistic.
 				// Another arbitrary yet reasonable choice is to undo it by 50%.
-				matchNum += round(randBlockSize / 2.0);
+				matchNum += round(randBlockSize * translocationFactor);
 			}
 				break;
 			default: {

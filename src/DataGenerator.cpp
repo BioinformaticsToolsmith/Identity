@@ -25,27 +25,15 @@
 /**
  * This constructor should be used for all vs. all
  */
-DataGenerator::DataGenerator(std::string fileName) {
-
-	FastaReader reader(fileName, Parameters::getBlockSize());
+DataGenerator::DataGenerator(std::string fileName, int blockSize) {
+	FastaReader reader(fileName, blockSize);
 	block = reader.read();
 
-	// Calculate average length
-	double sum = 0.0;
-	for (auto p : *block) {
-		sum += p.second->size();
-	}
-	int seqNum = block->size();
-	average = round(sum / seqNum);
-	cout << "Average: " << average << endl;
-
 	calculateK();
-
-	// Calculate histogram size
-	histogramSize = pow(4, k);
-	cout << "Histogram size: " << histogramSize << endl;
+	calculateHistSize();
 
 	// Find maximum length
+	int seqNum = block->size();
 	for (int h = 0; h < seqNum; h++) {
 		uint64_t len = block->at(h).second->size();
 		if (len > maxLength) {
@@ -128,6 +116,14 @@ DataGenerator::DataGenerator(std::string dbName, std::string qryFile,
 		maxLength = 2 * maxLength;
 	}
 
+	calculateK();
+	calculateHistSize();
+
+	// Free up memory
+	delete qryBlock;
+}
+
+void DataGenerator::calculateK() {
 	// Calculate average length
 	double sum = 0.0;
 	for (auto p : *block) {
@@ -135,19 +131,8 @@ DataGenerator::DataGenerator(std::string dbName, std::string qryFile,
 	}
 
 	average = round(sum / block->size());
-	cout << "Average: " << average << endl;
-
-	calculateK();
-
-	// Calculate histogram size
-	histogramSize = pow(4, k);
-	cout << "Histogram size: " << histogramSize << endl;
-
-	// Free up memory
-	delete qryBlock;
-}
-
-void DataGenerator::calculateK() {
+	std::cout << "Average: " << average << std::endl;
+	// Calculate k
 	k = ceil(log(average) / log(Parameters::getAlphabetSize()))
 			- Parameters::getKRelax();
 	if (k < 2) {
@@ -155,7 +140,13 @@ void DataGenerator::calculateK() {
 		std::cerr << "K is set to 2." << std::endl;
 		k = 2;
 	}
-	cout << "K: " << k << endl;
+	std::cout << "K: " << k << std::endl;
+}
+
+void DataGenerator::calculateHistSize() {
+	// Calculate histogram size
+	histogramSize = pow(4, k);
+	std::cout << "Histogram size: " << histogramSize << std::endl;
 }
 
 DataGenerator::~DataGenerator() {

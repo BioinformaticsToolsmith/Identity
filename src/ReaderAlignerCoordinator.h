@@ -43,6 +43,7 @@ private:
 	char mode;
 	double threshold = 0.0;
 	bool canRelax;
+	bool canReportAll;
 
 	void alignFileVsFile1(string, string, string, string, bool);
 	void alignFileVsFile2(string, string, string, string, bool);
@@ -54,7 +55,7 @@ public:
 	static const char C = 'c';
 	static const char R = 'r';
 
-	ReaderAlignerCoordinator(int, int, char, double, bool);
+	ReaderAlignerCoordinator(int, int, char, double, bool, bool);
 	virtual ~ReaderAlignerCoordinator();
 
 	void alignAllVsAll(string, string, string);

@@ -62,7 +62,7 @@ Aligner::Aligner(DataGenerator *d, ITransformer *t, Block *a, string dlmIn,
 	}
 	featList.clear();
 
-	isLengthFilter = filter;
+	canReportAll = filter;
 
 	ssPtr = new stringstream();
 }
@@ -136,7 +136,7 @@ void Aligner::processBlockHelper() {
 			init = j + 1;
 		}
 		auto p1 = blockA->at(j);
-		alignSeqVsBlock(p1.first, p1.second, blockB, kTable, monoTable,init);
+		alignSeqVsBlock(p1.first, p1.second, blockB, kTable, monoTable, init);
 	}
 
 	// Pop the block and free its memory
@@ -147,7 +147,7 @@ void Aligner::processBlockHelper() {
 template<class V>
 void Aligner::alignSeqVsBlock(std::string *info1, std::string *seq1,
 		Block *blockB, KmerHistogram<uint64_t, V> &kTable,
-		KmerHistogram<uint64_t, uint64_t> &monoTable,int init) {
+		KmerHistogram<uint64_t, uint64_t> &monoTable, int init) {
 
 	V *h1 = kTable.build(seq1);
 	uint64_t *mono1 = monoTable.build(seq1);
@@ -160,13 +160,15 @@ void Aligner::alignSeqVsBlock(std::string *info1, std::string *seq1,
 		auto p2 = blockB->at(hani);
 		string *seq2 = p2.second;
 		int l2 = seq2->size();
-		if (isLengthFilter
+
+		if (!canReportAll
 				&& (std::min(l1, l2) / (double) std::max(l1, l2) < threshold)) {
 			continue;
 		}
 
 		V *h2 = kTable.build(seq2);
 		uint64_t *mono2 = monoTable.build(seq2);
+
 		Statistician<V> s(histogramSize, k, h1, h2, mono1, mono2,
 				compositionList, keyList);
 
@@ -174,7 +176,7 @@ void Aligner::alignSeqVsBlock(std::string *info1, std::string *seq1,
 
 		double res = predictor.calculateIdentity(data);
 
-		if (res >= threshold - error) {
+		if (canReportAll || res >= threshold - error) {
 			canWrite = true;
 
 			if (res > 1.0) {

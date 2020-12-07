@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * GLMClassifier.h
@@ -58,6 +58,8 @@ protected:
 	double threshold;
 	int threadNum;
 	int minFeat;
+	// For negative data
+	double balance;
 
 	std::vector<ITransformer*> *pipe;
 	// A list of initial features
@@ -80,7 +82,8 @@ protected:
 	void clean(std::vector<Feature*>&);
 
 public:
-	GLMClassifier(const Matrix*, const Matrix*, double, int, int);
+	GLMClassifier(const Matrix*, const Matrix*, double, int, int,
+			double b = 1.0);
 	virtual ~GLMClassifier();
 	virtual void start();
 

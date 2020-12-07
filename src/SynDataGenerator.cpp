@@ -166,7 +166,8 @@ void SynDataGenerator::generateDataHelper() {
 	// Generate mutated sequences from each sequence
 	KmerHistogram<uint64_t, V> kTable(k);
 	KmerHistogram<uint64_t, uint64_t> monoTable(1);
-	uint8_t keyList[histogramSize * k];
+	// uint8_t keyList[histogramSize * k];
+	uint8_t * keyList = new uint8_t[histogramSize * k]; // Will be deleted at the end of this method
 	kTable.getKeysDigitFormat(keyList);
 	const int statNum =
 			funIndexList.empty() ?
@@ -268,4 +269,6 @@ void SynDataGenerator::generateDataHelper() {
 		delete[] h1;
 		delete[] mono1;
 	}
+
+	delete [] keyList;
 }

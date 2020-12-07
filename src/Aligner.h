@@ -59,7 +59,7 @@ private:
 
 	// If enabled aligner does not align two sequences if they
 	// can achieve the minimum identity score.
-	bool isLengthFilter;
+	bool canReportAll;
 
 	double threshold;
 
@@ -83,7 +83,6 @@ private:
 			KmerHistogram<uint64_t, V> &kTable,
 			KmerHistogram<uint64_t, uint64_t> &monoTable, /*uint8_t *keyList,*/
 			int init);
-
 public:
 	Aligner(DataGenerator*, ITransformer*, Block*, string, bool, double,
 			double e, uint8_t*);

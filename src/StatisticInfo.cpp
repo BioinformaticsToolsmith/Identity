@@ -41,9 +41,8 @@ StatisticInfo::StatisticInfo() {
 	fList->push_back(new Feature(Stat::BRAYCURTIS, "bray_curtis", true));
 	fList->push_back(new Feature(Stat::SQUARED_CHORD, "squared_chord", true));
 	fList->push_back(new Feature(Stat::HELLINGER, "hellinger", true));
-	fList->push_back(
-			new Feature(Stat::CUMULATIVE_DIFF, "cumulative_difference", true));
-	fList->push_back(new Feature(Stat::EMD, "emd", true));
+	//fList->push_back(new Feature(Stat::CUMULATIVE_DIFF, "cumulative_difference", true));
+	//fList->push_back(new Feature(Stat::EMD, "emd", true));
 	fList->push_back(new Feature(Stat::KL_CONDITIONAL, "kl_conditional", true));
 	fList->push_back(new Feature(Stat::K_DIVERGENCE, "k_divergence", true));
 	fList->push_back(
@@ -65,7 +64,7 @@ StatisticInfo::StatisticInfo() {
 	fList->push_back(new Feature(Stat::SIM_RATIO, "sim_ratio", false));
 	fList->push_back(new Feature(Stat::MARKOV_R, "markov_r", false));
 	fList->push_back(new Feature(Stat::SIM_MM, "simMM", false));
-	fList->push_back(new Feature(Stat::LENGTH_RATIO, "length_ratio", false));
+	// fList->push_back(new Feature(Stat::LENGTH_RATIO, "length_ratio", false));
 	fList->push_back(new Feature(Stat::D2S_R, "d2_s_r", false));
 	fList->push_back(new Feature(Stat::D2STAR, "d2_star", false));
 }

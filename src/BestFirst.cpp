@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * BestFirst.cpp
@@ -63,6 +63,14 @@ BestFirst<T>::BestFirst(const Matrix &f, const Matrix &l,
 			best = v.first;
 			maximum = v.second;
 			eCount = 0;
+
+			// Print new features
+			std::cout << "Better performance of: " << maximum << std::endl;
+			const int *list = best.getList();
+			int s = best.getSize();
+			for (int a = 0; a < s; a++) {
+				std::cout << "\t" << fList.at(list[a])->getName() << std::endl;
+			}
 		}
 		// Step 5
 		std::vector < Node > eList = v.first.expand(fNum);
@@ -70,6 +78,7 @@ BestFirst<T>::BestFirst(const Matrix &f, const Matrix &l,
 
 		// Step 6
 		int childNum = eList.size();
+		// double resultList[childNum] { 0.0 };
 		std::vector<double> resultList(childNum, 0.0);
 #pragma omp parallel for schedule(static) num_threads(threadNum)
 		for (int i = 0; i < childNum; i++) {

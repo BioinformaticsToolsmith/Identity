@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * DataGenerator.h
@@ -32,6 +32,7 @@
 class DataGenerator {
 private:
 	void calculateK();
+	void calculateHistSize();
 
 protected:
 	Block *block;
@@ -45,12 +46,12 @@ protected:
 	double *compositionList;
 
 	// Model of all data (single statistics only)
-	Matrix *fTable;
+	Matrix *fTable = nullptr;
 	// Model of associated labels (identity scores)
-	Matrix *lTable;
+	Matrix *lTable = nullptr;
 
 public:
-	DataGenerator(std::string);
+	DataGenerator(std::string, int blockSize = Parameters::getBlockSize());
 	DataGenerator(std::string, std::string, double);
 	virtual ~DataGenerator();
 

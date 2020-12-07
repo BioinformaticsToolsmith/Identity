@@ -67,6 +67,9 @@ private:
 	default_random_engine * gen;
 	uniform_real_distribution<> * zeroOneRand;
 
+	double translocationFactor;
+	double inversionFactor;
+
 	char getRandomNucleotide();
 	void makeCompositionList();
 	void help(int, int , int);
