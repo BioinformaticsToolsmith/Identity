@@ -1,6 +1,6 @@
 # Identity
 
-Identity 1.0 is developed by Hani Z. Girgis, PhD.
+Identity 1.1 is developed by Hani Z. Girgis, PhD.
 
 This program calculates DNA sequence identity scores rapidly without alignment.
 
@@ -48,6 +48,11 @@ List of parameters:
 	
 	-t: Required. Identity score threshold (between 0 & 0.99), below which pairs are not reported.
 	
+	-a: Optional. Report identity scores for all pairs including those below the threshold -- y
+	    (yes) or n (no). If yes, it may take long time on large datasets due to writing to a file.
+	    This option should be used if you desire constructing a phylogenetic tree. You may use the
+	    accompanying Python program to covert Identity's output to a Phylip distance matrix.
+	
 	-q: Optional. Query file in FASTA format. If no query(s) is provided, all versus all is
 	    performed on the database file.
 	    
@@ -78,11 +83,15 @@ Examples:
 	4. To perform all versus all with a minimum identity score of 0.8 with strict threshold
 		identity -d databas.fasta -o output.txt -t 0.8 -r n
 
-	5. To print the academic lincense
+	5. To perform all versus all with a minimum identity score of 0.8 and report all pairs
+		identity -d databas.fasta -o output.txt -t 0.8 -a y
+
+	6. To print the academic lincense
 		identity -l y
 		
-Hierarchical clustering:
+Phylogenetic trees:
 
-	To utilize the all-versus-all identity scores in hierarchical clustering see the README file 
-	under the py directory.
+	To produce an all-versus-all distance matrix in Phylip format use makePhylipMatrix.py under the
+	py directory. 
+
 
