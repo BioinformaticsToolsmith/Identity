@@ -4,7 +4,7 @@ Identity 1.1 is developed by Hani Z. Girgis, PhD.
 
 This program calculates DNA sequence identity scores rapidly without alignment.
 
-Copyright (C) 2020 Hani Z. Girgis, PhD
+Copyright (C) 2020–2021 Hani Z. Girgis, PhD
 
 Academic use: Affero General Public License version 1.
 
