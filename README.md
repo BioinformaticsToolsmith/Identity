@@ -17,9 +17,9 @@ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more inform
 
 Please cite the following paper: 
 
-	Identity: Rapid alignment-free prediction of sequence alignment identity scores using
-	self-supervised general linear models. Hani Z. Girgis, Benjamin T. James, and Brian B.
-	Luczak. NAR GAB, 2020.
+	Identity: Rapid alignment-free prediction of sequence alignment identity scores using 
+	self-supervised general linear models (2021). Hani Z. Girgis, Benjamin T. James, and 
+	Brian B. Luczak. NAR Genom Bioinform, 13(1), lqab001.
 
 Requirments:
 
