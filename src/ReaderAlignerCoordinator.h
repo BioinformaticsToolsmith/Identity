@@ -26,6 +26,7 @@
 #include <vector>
 #include <future>
 #include <thread>
+#include <chrono>
 
 #include "FastaReader.h"
 #include "Aligner.h"
