@@ -25,6 +25,7 @@
 #include <thread>
 #include <algorithm>
 
+#include "GMM.h"
 #include "MeanShiftLarge.h"
 #include "../Util.h"
 #include "../FastaReader.h"
@@ -533,12 +534,21 @@ int main(int argc, char *argv[]) {
 		std::cout << "\t-d: Required. Database file in FASTA format."
 				<< std::endl;
 		std::cout
-				<< "\t-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score)."
+				<< "\t-o: Required. Output file. Each line has 4 tab-separated fields: cluster number, sequence header,"
+				<< std::endl;
+		std::cout
+				<< "\t    identity score with the cluster center, C/M/E/O. C/M/E/O stand for center, member, extended"
+				<< std::endl;
+		std::cout
+				<< "\t    member (threshold - regression error), outside (less than threshold). The O mark should be seen"
+				<< std::endl;
+		std::cout
+				<< "\t    when the -a y is used."
 				<< std::endl;
 
 		// Optional parameters
 		std::cout
-				<< "\t-t: Optional. Threshold identity score (between 0 & 0.99), below which pairs are not reported."
+				<< "\t-t: Optional. Threshold identity score (between 0 & 0.99) for determining cluster membership."
 				<< std::endl;
 
 		std::cout
