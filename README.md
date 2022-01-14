@@ -98,6 +98,13 @@ Phylogenetic trees:
 
 # MeShClust
 
+To Test:
+
+	cd test
+	../bin/meshclust -d 97_shuffled.fa -o output.txt -t 0.97
+	
+	MeShClust should produce 100 clusters.
+
 List of parameters:
 
 	-d: Required. Database file in FASTA format.
