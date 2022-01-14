@@ -101,7 +101,10 @@ Phylogenetic trees:
 List of parameters:
 
 	-d: Required. Database file in FASTA format.
-	-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score).
+	-o: Required. Output file. Each line has 4 tab-separated fields: cluster number, sequence header,
+	    identity score with the cluster center, C/M/E/O. C/M/E/O stand for center, member, extended
+	    member (threshold - regression error), outside (less than threshold). The O mark should be seen
+	    when the -a y is used.
 	-t: Optional. Threshold identity score (between 0 & 0.99) for determining cluster membership.
 	-a: Optional. Assign every sequence to a cluster regardless of the threshold -- y or n
 	    (default: n). If no, a sequence that is not within the threshold score of any
