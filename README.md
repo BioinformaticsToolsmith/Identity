@@ -99,6 +99,7 @@ Phylogenetic trees:
 # MeShClust
 
 List of parameters:
+
 	-d: Required. Database file in FASTA format.
 	-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score).
 	-t: Optional. Threshold identity score (between 0 & 0.99), below which pairs are not reported.
@@ -127,6 +128,7 @@ List of parameters:
 	-h: Optional. Print this help message.
 
 Examples: 
+
 	1. To cluster sequences with a minimum identity score of 0.8
 		meshclust -d input.fa -o output.txt -t 0.8
 
