@@ -102,7 +102,7 @@ List of parameters:
 
 	-d: Required. Database file in FASTA format.
 	-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score).
-	-t: Optional. Threshold identity score (between 0 & 0.99), below which pairs are not reported.
+	-t: Optional. Threshold identity score (between 0 & 0.99) for determining cluster membership.
 	-a: Optional. Assign every sequence to a cluster regardless of the threshold -- y or n
 	    (default: n). If no, a sequence that is not within the threshold score of any
 	    cluster will comprise its own cluster. If yes, the assignment step may take long time on large sets.
