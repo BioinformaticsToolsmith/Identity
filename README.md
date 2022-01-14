@@ -1,4 +1,4 @@
-# Identity
+# Identity & MeShClust
 
 Identity 1.1 is developed by Hani Z. Girgis, PhD.
 
@@ -34,6 +34,8 @@ To Compile:
 	(Or if you would like to specify a different compiler that meets the requirement)
  	cmake .. -DCMAKE_CXX_COMPILER=your_compiler_name_for_example_g++-7
 	make
+
+# Identity
 
 To Test:
 
@@ -94,4 +96,64 @@ Phylogenetic trees:
 	To produce an all-versus-all distance matrix in Phylip format use makePhylipMatrix.py under the
 	py directory. 
 
+# MeShClust
+
+List of parameters:
+	-d: Required. Database file in FASTA format.
+	-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score).
+	-t: Optional. Threshold identity score (between 0 & 0.99), below which pairs are not reported.
+	-a: Optional. Assign every sequence to a cluster regardless of the threshold -- y or n
+	    (default: n). If no, a sequence that is not within the threshold score of any
+	    cluster will comprise its own cluster. If yes, the assignment step may take long time on large sets.
+	    It would not take additional time if the evaluation option and this option are enabled together.
+	-c: Optional. Number of cores or hyperthreads. For the search mode, set this parameter to the
+	    number of cores not hyperthreads. For example, suppose your computer has 4 cores, each of
+	    which supports 2 hyperthreads. Set this parameter to 4 if you are using the search mode or
+	    to 8 if you are using the all-versus-all mode. By default, all hyperthreads are used.
+	-r: Optional. Automatically relax the threshold according to the predictor error -- y or n
+	    (default: y). This option affects the final assignment step only.
+	-e: Optional. Evaluate cluster quality. May take long time on large data sets -- y or n
+	    (default: n). It would not take additional time if this option and the assign-all 
+	    option are enabled together.
+	-b: Optional. The batch size for all vs. all (default: 25,000; maximum: 46,340).
+	    Increasing this number will slow the program.
+	-v: Optional. The batch size of sequences to be read (default: 100,000).
+	    It is recommended to be 2-4 times the all-vs-all batch adjusted by parameter -b.
+	    Increasing this number will require more memory.
+	-p: Optional. The number of data passes (default: 10).
+	    It applies to the scaled-up version -- not to the original algorithm.
+	-l: Optional. Print academic license (Affero General Public License version 1) and exit -- y
+	    (yes) or n (no).
+	-h: Optional. Print this help message.
+
+Examples: 
+	1. To cluster sequences with a minimum identity score of 0.8
+		meshclust -d input.fa -o output.txt -t 0.8
+
+	2. To cluster sequences with an estimated minimum identity score
+		meshclust -d input.fa -o output.txt
+
+	3. To cluster sequences with a minimum identity score of 0.8 and evaluate
+		meshclust -d input.fa -o output.txt -t 0.8 -e y
+
+	4. To cluster sequences with a minimum identity score of 0.8 and assign every
+	   sequence to a cluster even if its identity score with a cluster center is
+	   less than the minimum score (useful when your data are noise free)
+		meshclust -d input.fa -o output.txt -t 0.8 -a y
+
+	5. To cluster sequences with a minimum identity score of 0.8 and assign each sequence
+	   according to the minimum score without relaxing by the regression model error
+		meshclust -d input.fa -o output.txt -t 0.8 -r n
+
+	6. To cluster sequences with a minimum identity score of 0.8 using an all-vs-all
+	   block size of 1000 and a reading block size of 4000
+		meshclust -d input.fa -o output.txt -t 0.8 -b 1000 -v 4000
+
+	7. To cluster sequences with a minimum identity score of 0.8 and specify the number
+	   of data passes (useful when the algorithm did not converge, i.e., cluster count
+	   kept changing from iteration to iteration)
+		meshclust -d input.fa -o output.txt -t 0.8 -p 100
+
+	8. To print the academic license
+		meshclust -l y
 
