@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -107,7 +107,7 @@ TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
 int main(int argc, char *argv[]) {
 	std::cout << std::endl;
-	std::cout << "Identity 1.1 is developed by Hani Z. Girgis, PhD."
+	std::cout << "Identity v1.2 is developed by Hani Z. Girgis, PhD."
 			<< std::endl;
 	std::cout << std::endl;
 	std::cout
@@ -151,13 +151,15 @@ int main(int argc, char *argv[]) {
 		std::cout << "\t-d: Required. Database file in FASTA format."
 				<< std::endl;
 		std::cout
-				<< "\t-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score)."
-				<< std::endl;
-		std::cout
 				<< "\t-t: Required. Threshold identity score (between 0 & 0.99), below which pairs are not reported."
 				<< std::endl;
 
 		// Optional parameters
+		std::cout
+				<< "\t-o: Optional. Output file. Each line has 3 tab-separated fields (>header1    >header2    score)."
+				<< std::endl << "\t    If not provided, the -s option must be used."
+				<< std::endl;
+
 		std::cout
 				<< "\t-a: Optional. Report identity scores for all pairs including those below the threshold -- y"
 				<< std::endl;
@@ -196,6 +198,24 @@ int main(int argc, char *argv[]) {
 		std::cout
 				<< "\t    n (no). By default, it is enabled except if the threshold is 0.9 or higher."
 				<< std::endl;
+
+		std::cout
+				<< "\t-s: Optional. A file name to store the model, so no training is required if this model is used."
+				<< std::endl;
+		std::cout
+				<< "\t    To load the model, use the -f option. These options are good for searching the same database"
+				<< std::endl;
+		std::cout
+				<< "\t    multiple times without having to retrain Identity each time."
+				<< std::endl;
+
+		std::cout
+				<< "\t-f: Optional. A file name to fill the model from. No training is carried out with this option."
+				<< std::endl;
+		std::cout
+				<< "\t    To save a model, run Identity to completion one time with the -s option."
+				<< std::endl;
+
 		std::cout
 				<< "\t-l: Optional. Print academic license (Affero General Public License version 1) and exit -- y"
 				<< std::endl;
@@ -213,8 +233,21 @@ int main(int argc, char *argv[]) {
 				<< std::endl;
 		std::cout << std::endl;
 
+		std::cout << "\t2. To perform multiple searches on the same database"
+				<< std::endl;
 		std::cout
-				<< "\t2. To perform database search with a minimum identity score of 0.7 using 10 threads"
+				<< "\t\tidentity -d databas.fasta -q query1.fasta -o output.txt -t 0.7 -s model.txt"
+				<< std::endl;
+		std::cout
+				<< "\t\tidentity -d databas.fasta -q query2.fasta -o output.txt -t 0.7 -f model.txt"
+				<< std::endl;
+		std::cout
+				<< "\t\tidentity -d databas.fasta -q query3.fasta -o output.txt -t 0.7 -f model.txt"
+				<< std::endl;
+		std::cout << std::endl;
+
+		std::cout
+				<< "\t3. To perform database search with a minimum identity score of 0.7 using 10 threads"
 				<< std::endl;
 		std::cout
 				<< "\t\tidentity -d databas.fasta -q query.fasta -o output.txt -t 0.7 -c 10"
@@ -222,36 +255,36 @@ int main(int argc, char *argv[]) {
 		std::cout << std::endl;
 
 		std::cout
-				<< "\t3. To perform all versus all with a minimum identity score of 0.8"
+				<< "\t4. To perform all versus all with a minimum identity score of 0.8"
 				<< std::endl;
 		std::cout << "\t\tidentity -d databas.fasta -o output.txt -t 0.8"
 				<< std::endl;
 		std::cout << std::endl;
 
 		std::cout
-				<< "\t4. To perform all versus all with a minimum identity score of 0.8 with strict threshold"
+				<< "\t5. To perform all versus all with a minimum identity score of 0.8 with strict threshold"
 				<< std::endl;
 		std::cout << "\t\tidentity -d databas.fasta -o output.txt -t 0.8 -r n"
 				<< std::endl;
 		std::cout << std::endl;
 
 		std::cout
-				<< "\t5. To perform all versus all with a minimum identity score of 0.8 and report all pairs"
+				<< "\t6. To perform all versus all with a minimum identity score of 0.8 and report all pairs"
 				<< std::endl;
 		std::cout << "\t\tidentity -d databas.fasta -o output.txt -t 0.8 -a y"
 				<< std::endl;
 		std::cout << std::endl;
 
-		std::cout << "\t6. To print the academic lincense" << std::endl;
+		std::cout << "\t7. To print the academic license" << std::endl;
 		std::cout << "\t\tidentity -l y" << std::endl;
 		std::cout << std::endl;
 
 		exit(0);
 	}
 
-	std::string dbFile;
-	std::string qryFile;
-	std::string outFile;
+	std::string dbFile("");
+	std::string qryFile("");
+	std::string outFile("");
 
 	char relax = 'y';
 	bool relaxUserInit = false;
@@ -259,6 +292,9 @@ int main(int argc, char *argv[]) {
 	char all = 'n';
 	int cores = std::thread::hardware_concurrency();
 	double threshold = -1.0;
+	bool canFillModel = false;
+	bool canSaveModel = false;
+	std::string modelFile("");
 
 	for (int i = 1; i < argc; i += 2) {
 		switch (argv[i][1]) {
@@ -302,6 +338,18 @@ int main(int argc, char *argv[]) {
 		}
 			break;
 
+		case 'f': {
+			modelFile = std::string(argv[i + 1]);
+			canFillModel = true;
+		}
+			break;
+
+		case 's': {
+			modelFile = std::string(argv[i + 1]);
+			canSaveModel = true;
+		}
+			break;
+
 		default: {
 			std::cerr << argv[i][1]
 					<< " is invalid option. Rerun with -h to see the help message.";
@@ -310,6 +358,16 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 		}
+	}
+
+	if (canSaveModel && canFillModel) {
+		std::cerr
+				<< "Error: Options -s and -f cannot be used at the same time.";
+		std::cerr << std::endl;
+		std::cerr << "\tRerun with -h to see the help message.";
+		std::cerr << std::endl;
+		std::cerr << std::endl;
+		exit(1);
 	}
 
 	if (license == 'y') {
@@ -345,10 +403,37 @@ int main(int argc, char *argv[]) {
 		std::cerr << std::endl;
 		std::cerr << std::endl;
 		exit(1);
+	} else if (!Util::doesFileExist(dbFile)) {
+		std::cerr << "Error: Cannot open database file " << dbFile;
+		std::cerr << std::endl;
+		std::cerr << std::endl;
+		std::cerr << std::endl;
+		exit(1);
 	}
 
-	if (outFile.empty()) {
-		std::cerr << "Error: Please provide an output file.";
+	if (!qryFile.empty()) {
+		if (!Util::doesFileExist(qryFile)) {
+			std::cerr << "Error: Cannot open query file " << qryFile;
+			std::cerr << std::endl;
+			std::cerr << std::endl;
+			std::cerr << std::endl;
+			exit(1);
+		}
+	}
+
+	if (canFillModel) {
+		if (!Util::doesFileExist(modelFile)) {
+			std::cerr << "Error: Cannot open model file " << modelFile;
+			std::cerr << std::endl;
+			std::cerr << std::endl;
+			std::cerr << std::endl;
+			exit(1);
+		}
+	}
+
+	if (outFile.empty() && !canSaveModel) {
+		std::cerr
+				<< "Error: Please provide an output file or use the -s option.";
 		std::cerr << std::endl;
 		std::cerr << "\tRerun with -h to see the help message.";
 		std::cerr << std::endl;
@@ -406,9 +491,9 @@ int main(int argc, char *argv[]) {
 	Parameters p;
 	int blockSize = qryFile.empty() ? 100000 : 1000;
 
-	char mode = 'r';
-	ReaderAlignerCoordinator coordinator(cores, blockSize, mode, threshold,
-			relax == 'y' ? true : false, all == 'y' ? true : false);
+	ReaderAlignerCoordinator coordinator(cores, blockSize, threshold,
+			relax == 'y' ? true : false, all == 'y' ? true : false,
+			canSaveModel, canFillModel, modelFile);
 	if (qryFile.empty()) {
 		coordinator.alignAllVsAll(dbFile, outFile, "\t");
 	} else {

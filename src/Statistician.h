@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -54,11 +54,11 @@ enum Stat : int8_t {
 	HELLINGER,
 	//CUMULATIVE_DIFF,
 	//EMD,
-	KL_CONDITIONAL,
-	K_DIVERGENCE,
+	//KL_CONDITIONAL, /*7/9/2021*/
+	//K_DIVERGENCE, /*7/9/2021*/
 	JEFFREY_DIVERGENCE,
-	JENSEN_SHANNON_DIVERGENCE,
-	RRE,
+	//JENSEN_SHANNON_DIVERGENCE,
+	//RRE,/*7/9/2021*/
 
 	/*
 	 * Add new distance statistics before this block comment.
@@ -74,7 +74,7 @@ enum Stat : int8_t {
 	COVARIANCE_R,
 	HARMONIC_MEAN_R,
 	SIM_RATIO,
-	MARKOV_R,
+	//MARKOV_R, /*7/9/2021*/
 	SIM_MM,
 	//LENGTH_RATIO,
 	D2S_R,
@@ -108,6 +108,7 @@ private:
 
 	// methodList is an array of function pointers
 	static double (Statistician<V>::*methodList[Stat::ALL_NUM])();
+	const int alphaSize = Parameters::getAlphabetSize();
 
 public:
 	Statistician(int histogramSizeIn, int kIn, const V *h1In, const V *h2In,
@@ -208,6 +209,11 @@ public:
 	double harmonicMeanSimilarityHelper(const V*, const V*);
 	double markovSimilarityHelper(const V*, const V*);
 	double d2sSimilarityHelper(const V*, const V*);
+
+	/**
+	 * Calculate the potential identity minimum that can be obtained on these two sequences
+	 */
+	double identityMinimum(int, int);
 
 	/**
 	 * Requires a vector of standard deviations calculated on the entire data set.

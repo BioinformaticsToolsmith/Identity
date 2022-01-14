@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -57,6 +57,21 @@ private:
 
 	static double TRANSLOCATION_FACTOR;
 	static double INVERSION_FACTOR;
+
+	// Mean shift parameters
+	static int MS_ITR;
+	static int MS_BANDWIDTH_BLOCK;
+	static int MS_BLOCK;
+	static int MS_V_BLOCK;
+	static int MS_PASS_NUM;
+	static int MS_READ_MORE;
+	static double MS_BANDWIDTH_THRESHOLD;
+	//static double MS_RELIABLE_THRESHOLD;
+	//static double MS_RELIABLE_NUMERATOR;
+	static int MS_MAX_MATRIX_SIZE;
+	static int MS_BANDWIDTH_ITERATIONS;
+	static int MS_PRINT_BLOCK;
+	static double MS_SLACK_MAX;
 
 public:
 	static const int DNA = 0;
@@ -116,6 +131,22 @@ public:
 
 	static double getTranslocationFactor();
 	static double getInversionFactor();
+
+	// Parameters controlling the mean shift
+	static int getMsItr();
+	static int getMsBandwidthBlock();
+	static double getMsBandwidthThreshold();
+	static int getMsMaxMatrixSize();
+	//static double getMsReliableThreshold();
+	//static double getMsReliableNumerator();
+	static int getMsBandwidthIterations();
+	static int getMsBlock();
+	static int getMsVBlock();
+	static int getMsPassNum();
+	static int getMsReadMore();
+
+	static int getMsPrintBlock();
+	static double getMsSlackMax();
 };
 
 #endif /* PARAMETERS_H_ */

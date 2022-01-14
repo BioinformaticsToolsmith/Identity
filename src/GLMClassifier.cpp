@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -57,7 +57,7 @@ GLMClassifier::~GLMClassifier() {
 	fList->clear();
 	delete fList;
 
-	clean(f5);
+	clean (f5);
 }
 
 void GLMClassifier::start() {
@@ -171,8 +171,9 @@ pair<Matrix, std::vector<Feature*> > GLMClassifier::selectFeatures(Matrix &t4,
 	auto isNewBetter = [](double newV, double oldV) {
 		return (newV - oldV > 0.001) ? true : false;
 	};
-	BestFirst<GLM> selector(t4, *lTrainTable, f4, GLM::classifierFactory,
-			Evaluator::acc, isNewBetter, true, threadNum, minFeat);
+	BestFirst < GLM
+			> selector(t4, *lTrainTable, f4, GLM::classifierFactory,
+					Evaluator::acc, isNewBetter, true, threadNum, minFeat);
 	return std::make_pair(selector.transform(t4), selector.getFeatureList());
 }
 
@@ -336,7 +337,9 @@ Matrix GLMClassifier::transform(const Matrix &f) {
 
 	Matrix m = pipe->at(0)->transform(f);
 	for (int i = 1; i < s; i++) {
-		m = pipe->at(i)->transform(m);
+		Matrix c = std::move(pipe->at(i)->transform(m));
+		m.clearData();
+		m = c;
 	}
 	return m;
 }

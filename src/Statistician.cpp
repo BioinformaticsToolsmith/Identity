@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -37,11 +37,11 @@ double (Statistician<V>::*Statistician<V>::methodList[Stat::ALL_NUM])() = {
 	&Statistician < V > ::hellingerDistance,
 	//&Statistician < V> ::cumulativeDiffDistance,
 	//&Statistician < V > ::emdDistance,
-	&Statistician < V> ::klConditionalDistance,
-	&Statistician < V > ::kDivergenceDistance,
+	//&Statistician < V> ::klConditionalDistance, /*7/9/2021*/
+	//&Statistician < V > ::kDivergenceDistance, /*7/9/2021*/
 	&Statistician < V > ::jeffreyDivergenceDistance,
-	&Statistician < V > ::jensenShannonDivergenceDistance,
-	&Statistician < V > ::rreDistance,
+	//&Statistician < V > ::jensenShannonDivergenceDistance, /*7/9/2021*/
+	//&Statistician < V > ::rreDistance, /*7/9/2021*/
 	nullptr,
 	&Statistician < V > ::intersectionSimilarity,
 	&Statistician < V > ::kulczynski1Similarity,
@@ -49,7 +49,7 @@ double (Statistician<V>::*Statistician<V>::methodList[Stat::ALL_NUM])() = {
 	&Statistician < V > ::covarianceRSimilarity,
 	&Statistician < V > ::harmonicMeanRSimilarity,
 	&Statistician < V > ::simRatioSimilarity,
-	&Statistician < V > ::markovRSimilarity,
+	//&Statistician < V > ::markovRSimilarity, /*7/9/2021*/
 	&Statistician < V > ::simMMSimilarity,
 	//&Statistician < V > ::lengthRatioSimilarity,
 	&Statistician < V > ::d2sRSimilarity,
@@ -70,7 +70,8 @@ Statistician<V>::Statistician(int histogramSizeIn, int kIn, const V *h1In,
 
 	if (Util::isEqual(mean1, 0.0) || Util::isEqual(mean2, 0.0)) {
 		std::cerr << "Mean 1 (mean1) and Mean 2 (mean2) cannot be zeros. ";
-		std::cerr << "Mean 1 is: " << mean1 << ", mean 2 is: " << mean2 << std::endl;
+		std::cerr << "Mean 1 is: " << mean1 << ", mean 2 is: " << mean2
+				<< std::endl;
 		std::cerr << std::endl;
 		throw std::exception();
 	}
@@ -80,6 +81,7 @@ Statistician<V>::Statistician(int histogramSizeIn, int kIn, const V *h1In,
 	uint64_t s2 = sum(h2) + histogramSize;
 	p1 = new double[histogramSize];
 	p2 = new double[histogramSize];
+
 	for (int i = 0; i < histogramSize; i++) {
 		p1[i] = (h1[i] + 1.0) / s1;
 		p2[i] = (h2[i] + 1.0) / s2;
@@ -194,18 +196,26 @@ double Statistician<V>::cosineDistanceHelper(const V *v1, const V *v2) {
 
 	double n1 = norm(v1);
 	double n2 = norm(v2);
+
+	double r = 0.5; // The observed average, not the actual midpoint that is 1.0
 	if (Util::isEqual(n1, 0.0) || Util::isEqual(n2, 0.0)) {
-		std::cerr << "Error at Cosine Distance. ";
-		std::cerr << "Vector norm (n1 or n2) is zero." << std::endl;
-
-		for (int i = 0; i < histogramSize; i++) {
-			std::cerr << v1[i] << "\t" << v2[i] << std::endl;
-		}
-
-		throw std::exception();
+		// It is possible that the correlation distance sends an all zeros vector
+		//# pragma omp critical (cosineDistanceHelper)
+		//		{
+		//			std::cerr << "Warning at Cosine Distance. ";
+		//			std::cerr << "Vector norm (n1 or n2) is zero." << std::endl;
+		//
+		//			//for (int i = 0; i < histogramSize; i++) {
+		//			//	std::cerr << v1[i] << "\t" << v2[i] << std::endl;
+		//			//}
+		//
+		//			//throw std::exception();
+		//		}
+	} else {
+		r = 1.0 - d / (n1 * n2);
 	}
 
-	return 1.0 - d / (n1 * n2);
+	return r;
 }
 
 template<class V>
@@ -329,7 +339,7 @@ double Statistician<V>::afdDistance() {
 		std::cerr << k << std::endl;
 		throw std::exception();
 	}
-	const auto alphaSize = Parameters::getAlphabetSize();
+	//const auto alphaSize = Parameters::getAlphabetSize();
 
 	double d = 0.0;
 	for (int i = 0; i < histogramSize; i++) {
@@ -508,7 +518,7 @@ double Statistician<V>::klConditionalDistance() {
 template<class V>
 double Statistician<V>::rreDistance() {
 	double d1 = 0.0, d2 = 0.0;
-	const int alphaSize = Parameters::getAlphabetSize();
+	//const int alphaSize = Parameters::getAlphabetSize();
 
 	for (auto i = 0; i < histogramSize; i += alphaSize) {
 		double sum1 = alphaSize, sum2 = alphaSize; // Start with pseudo count
@@ -687,7 +697,7 @@ template<class V>
 double Statistician<V>::markovSimilarityHelper(const V *t1, const V *t2) {
 	double total = 0.0;
 
-	const int alphaSize = Parameters::getAlphabetSize();
+	//const int alphaSize = Parameters::getAlphabetSize();
 
 	for (auto i = 0; i < histogramSize; i += alphaSize) {
 		uint64_t sum1 = alphaSize, sum2 = alphaSize;
@@ -736,7 +746,7 @@ double Statistician<V>::simMMSimilarity() {
 	double twoUnderOne = 0.0;
 	double twoUnderTwo = 0.0;
 
-	const int alphaSize = Parameters::getAlphabetSize();
+	//const int alphaSize = Parameters::getAlphabetSize();
 
 	for (auto i = 0; i < histogramSize; i += alphaSize) {
 		uint64_t sum1 = alphaSize, sum2 = alphaSize;
@@ -861,7 +871,7 @@ double Statistician<V>::d2sRSimilarity() {
 template<class V>
 double Statistician<V>::d2starSimilarity() {
 	// Calculate probability vectors based on monomers.
-	const int alphaSize = Parameters::getAlphabetSize();
+	//const int alphaSize = Parameters::getAlphabetSize();
 	uint64_t s1 = sum(mono1, alphaSize);
 	uint64_t s2 = sum(mono2, alphaSize);
 
@@ -912,6 +922,38 @@ double Statistician<V>::d2starSimilarity() {
 		}
 	}
 	return d2;
+}
+//
+//template<class V>
+//double Statistician<V>::identityMinimum(int l1, int l2) {
+//	double d = 0.0;
+//	for (int i = 0; i < histogramSize; i++) {
+//		d += h1[i] < h2[i] ? h1[i] : h2[i];
+//	}
+//	// uint64_t l1 = sum(mono1, 4);
+//	// uint64_t l2 = sum(mono2, 4);
+//
+//	// According to our definition of identity score, we should divide
+//	// by the length of the longer sequences
+//	return d / ((l1 < l2 ? l1 : l2) - k + 1);
+//}
+
+template<class V>
+double Statistician<V>::identityMinimum(int l1, int l2) {
+	double d = 0.0;
+	for (int i = 0; i < alphaSize; i++) {
+		d += mono1[i] < mono2[i] ? mono1[i] : mono2[i];
+	}
+
+	// According to our definition of identity score, we should divide
+	// by the length of the longer sequences
+//
+//#pragma omp critical
+//	{
+//		std::cout << d / (l1 > l2 ? l1 : l2) << std::endl;
+//	}
+
+	return d / (l1 > l2 ? l1 : l2);
 }
 
 /**

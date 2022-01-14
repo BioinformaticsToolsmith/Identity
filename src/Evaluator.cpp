@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * Evaluator.cpp
@@ -114,6 +114,34 @@ double Evaluator::mae(const Matrix &oLabels, const Matrix &pLabels) {
 		s += fabs(o[i] - p[i]);
 	}
 	return s / r;
+}
+
+/**
+ * Mean Absolute Error calculated on true sequences above the threshold
+ * such that the true identity score is higher than the predicted one
+ */
+double Evaluator::maeForMeshclust(const Matrix &oLabels, const Matrix &pLabels,
+		double threshold) {
+	int r = oLabels.getNumRow();
+	if (r != pLabels.getNumRow()) {
+		std::cerr << "Evaluator error: Original and predicted ";
+		std::cerr << "labels have different sizes." << std::endl;
+		throw std::exception();
+	}
+
+	const double *o = oLabels.getArray();
+	const double *p = pLabels.getArray();
+
+	double s = 0.0;
+	int c = 0;
+	for (int i = 0; i < r; i++) {
+		if (o[i] >= threshold && o[i] > p[i]) {
+			s += fabs(o[i] - p[i]);
+			c++;
+		}
+	}
+
+	return s / c;
 }
 
 /**

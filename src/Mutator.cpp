@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -92,7 +92,8 @@ void Mutator::help(int maxBlockIn, int seed, int minBlockIn) {
 	}
 	// Post condition
 	if (segmentList->empty()) {
-		cerr << "At least one valid segment is required." << endl;
+		cerr << "Mutator: At least one valid segment is required." << endl;
+		cerr << "Sequence: " << *oSequence << std::endl;
 		throw std::exception();
 	}
 	// Effective length is the number of valid nucleotides or a.a.
@@ -233,6 +234,12 @@ char Mutator::getRandomNucleotide() {
  * . Randomization has been fixed, i.e. the same sequences are produced using the same seed.
  */
 pair<string*, double> Mutator::mutateSequence(double mutationRate) {
+	// Added on 6/7/2021
+	if (Util::isEqual(mutationRate, 0.0)) {
+		string *mSequence = new string(*oSequence);
+		return make_pair(mSequence, 1.0);
+	}
+
 	// Pre-conditions
 	if (mutationRate < 0 || mutationRate > 1) {
 		cerr << "Mutation rate must be >= 0 and <= 1, but received ";

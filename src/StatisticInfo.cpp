@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -43,14 +43,14 @@ StatisticInfo::StatisticInfo() {
 	fList->push_back(new Feature(Stat::HELLINGER, "hellinger", true));
 	//fList->push_back(new Feature(Stat::CUMULATIVE_DIFF, "cumulative_difference", true));
 	//fList->push_back(new Feature(Stat::EMD, "emd", true));
-	fList->push_back(new Feature(Stat::KL_CONDITIONAL, "kl_conditional", true));
-	fList->push_back(new Feature(Stat::K_DIVERGENCE, "k_divergence", true));
+	//fList->push_back(new Feature(Stat::KL_CONDITIONAL, "kl_conditional", true)); /*7/9/2021*/
+	//fList->push_back(new Feature(Stat::K_DIVERGENCE, "k_divergence", true)); /*7/9/2021*/
 	fList->push_back(
 			new Feature(Stat::JEFFREY_DIVERGENCE, "jeffrey_divergence", true));
-	fList->push_back(
-			new Feature(Stat::JENSEN_SHANNON_DIVERGENCE,
-					"jensen_shannon_divergence", true));
-	fList->push_back(new Feature(Stat::RRE, "rre", true));
+	//fList->push_back(
+	//		new Feature(Stat::JENSEN_SHANNON_DIVERGENCE,
+	//				"jensen_shannon_divergence", true)); /*7/9/2021*/
+	//fList->push_back(new Feature(Stat::RRE, "rre", true)); /*7/9/2021*/
 
 	/**
 	 * These are similarity statistics
@@ -62,9 +62,9 @@ StatisticInfo::StatisticInfo() {
 	fList->push_back(
 			new Feature(Stat::HARMONIC_MEAN_R, "harmonic_mean_r", false));
 	fList->push_back(new Feature(Stat::SIM_RATIO, "sim_ratio", false));
-	fList->push_back(new Feature(Stat::MARKOV_R, "markov_r", false));
+	//fList->push_back(new Feature(Stat::MARKOV_R, "markov_r", false)); /*7/9/2021*/
 	fList->push_back(new Feature(Stat::SIM_MM, "simMM", false));
-	// fList->push_back(new Feature(Stat::LENGTH_RATIO, "length_ratio", false));
+	//fList->push_back(new Feature(Stat::LENGTH_RATIO, "length_ratio", false));
 	fList->push_back(new Feature(Stat::D2S_R, "d2_s_r", false));
 	fList->push_back(new Feature(Stat::D2STAR, "d2_star", false));
 }

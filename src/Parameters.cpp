@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -36,17 +36,28 @@ bool Parameters::IS_INVERSTION = false;
 int Parameters::MIN_BLOCK_SIZE = 2;
 int Parameters::MAX_BLOCK_SIZE = 5;
 int Parameters::BLOCK_SIZE = 1000;
-//int Parameters::BLOCK_SIZE = 30;
-int Parameters::K_RELAX = 2;
+int Parameters::K_RELAX = 1; //2;
 
 // These are not used
 int Parameters::MIN_FEAT_NUM = 3;
 int Parameters::MAX_FEAT_NUM = 5;
-double Parameters::DELTA_R = 0.00025;
-double Parameters::DELTA_C = 0.001;
+double Parameters::DELTA_R = 0.000025; // Unused
+double Parameters::DELTA_C = 0.001; // Unused
 
 double Parameters::TRANSLOCATION_FACTOR = 1.0;
 double Parameters::INVERSION_FACTOR = 1.0;
+
+int Parameters::MS_ITR = 100;
+int Parameters::MS_BANDWIDTH_BLOCK = 10000; // 1000
+int Parameters::MS_BLOCK = 25000;
+int Parameters::MS_V_BLOCK = 100000;
+int Parameters::MS_READ_MORE = 100000;
+int Parameters::MS_PASS_NUM = 10;
+double Parameters::MS_BANDWIDTH_THRESHOLD = 0.7;
+int Parameters::MS_MAX_MATRIX_SIZE = 46340;
+int Parameters::MS_BANDWIDTH_ITERATIONS = 3;
+int Parameters::MS_PRINT_BLOCK = 50000;
+double Parameters::MS_SLACK_MAX = 0.02;
 
 Parameters::Parameters() {
 	checkMutPerTemp();
@@ -56,7 +67,7 @@ Parameters::Parameters() {
 Parameters::~Parameters() {
 }
 
-double Parameters::getTranslocationFactor(){
+double Parameters::getTranslocationFactor() {
 	return TRANSLOCATION_FACTOR;
 }
 
@@ -271,3 +282,50 @@ void Parameters::setKRelax(int kRelax) {
 	K_RELAX = kRelax;
 }
 
+int Parameters::getMsItr() {
+	return MS_ITR;
+}
+
+int Parameters::getMsBandwidthBlock() {
+	return MS_BANDWIDTH_BLOCK;
+}
+
+double Parameters::getMsBandwidthThreshold() {
+	return MS_BANDWIDTH_THRESHOLD;
+}
+
+//double Parameters::getMsReliableNumerator() {
+//	return MS_RELIABLE_NUMERATOR;
+//}
+
+//double Parameters::getMsReliableThreshold() {
+//	return MS_RELIABLE_THRESHOLD;
+//}
+
+int Parameters::getMsMaxMatrixSize() {
+	return MS_MAX_MATRIX_SIZE;
+}
+
+int Parameters::getMsBandwidthIterations() {
+	return MS_BANDWIDTH_ITERATIONS;
+}
+
+int Parameters::getMsBlock() {
+	return MS_BLOCK;
+}
+
+int Parameters::getMsVBlock() {
+	return MS_V_BLOCK;
+}
+
+int Parameters::getMsPassNum() {
+	return MS_PASS_NUM;
+}
+
+double Parameters::getMsSlackMax() {
+	return MS_SLACK_MAX;
+}
+
+int Parameters::getMsPrintBlock() {
+	return MS_PRINT_BLOCK;
+}

@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * ReaderAlignerCoordinator.h
@@ -35,6 +35,7 @@
 #include "GLMRegressor.h"
 #include "SynDataGenerator.h"
 #include "AlignerParallel.h"
+#include "IdentityCalculator.h"
 
 using namespace std;
 
@@ -42,22 +43,29 @@ class ReaderAlignerCoordinator {
 private:
 	int workerNum;
 	int blockSize;
-	char mode;
 	double threshold = 0.0;
 	bool canRelax;
 	bool canReportAll;
+	bool canSaveModel;
+	bool canFillModel;
+	std::string modelFile;
 
 	void alignFileVsFile1(string, string, string, string, bool);
 	void alignFileVsFile2(string, string, string, string, bool);
 
 	template<class V>
-	void helper(string, string, string, string, bool, DataGenerator*);
+	void helper1(string, string, string, string, bool,
+			AlignerParallel<V> &aligner);
+	template<class V>
+	void helper2_simple(string, string, string, string, bool, DataGenerator*,
+			Serializer*);
+	template<class V>
+	void helper2(string, string, string, string, bool, DataGenerator*,
+			Serializer*);
 
 public:
-	static const char C = 'c';
-	static const char R = 'r';
-
-	ReaderAlignerCoordinator(int, int, char, double, bool, bool);
+	ReaderAlignerCoordinator(int, int, double, bool, bool, bool canSaveModel =
+			false, bool canFillModel = false, std::string modelFile = "");
 	virtual ~ReaderAlignerCoordinator();
 
 	void alignAllVsAll(string, string, string);

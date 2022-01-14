@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * Feature.cpp
@@ -39,7 +39,8 @@ Feature::Feature(int f, std::string n, bool i) :
 	w = 0.0;
 }
 
-Feature::~Feature() {}
+Feature::~Feature() {
+}
 
 Feature::Feature(const Feature &other) :
 		funIndex(other.funIndex), name(other.name), isDistance(other.isDistance) {

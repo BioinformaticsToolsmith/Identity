@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -22,35 +22,92 @@
  */
 
 template<class V>
+AlignerParallel<V>::AlignerParallel(Serializer &serializer, double t, bool f,
+		std::string d, int tNum, std::string oFile) {
+	k = serializer.getK();
+	histSize = serializer.getHistSize();
+	threshold = t;
+	// error = e;
+	relaxThreshold = t - serializer.getAbsError();
+	canReportAll = f;
+
+	int monoHistSize = Parameters::getAlphabetSize();
+	double *temp = serializer.getCompList();
+	compositionList = new double[monoHistSize];
+	for (int i = 0; i < monoHistSize; i++) {
+		compositionList[i] = temp[i];
+	}
+
+	dlm = d;
+	threadNum = tNum;
+
+	out = std::ofstream(oFile.c_str(), std::ios::out);
+	kTable = new KmerHistogram<uint64_t, V>(k);
+	monoTable = new KmerHistogram<uint64_t, uint64_t>(1);
+	keyList = Util::makeKeyList(histSize, k);
+
+//	keyList = new uint8_t[histSize * k];
+//	int alphaSize = Parameters::getAlphabetSize();
+//	for (int c = k - 1; c >= 0; c--) {
+//		for (int r = 0; r < histSize; r++) {
+//			keyList[(r * k) + k - 1 - c] = (r / ((uint64_t) pow(alphaSize, c)))
+//					% alphaSize;
+//		}
+//	}
+
+	auto featList = serializer.getFeatList();
+
+	featNum = featList->size() - 1; // The bias has not been removed yet.
+	for (auto f : *featList) {
+		if (f->getNumOfComp() == 0 && f->getName().compare("constant") != 0) {
+			funIndexList.push_back(f->getFunIndex());
+		}
+	}
+	singleFeatNum = funIndexList.size();
+	funIndexArray = funIndexList.data();
+
+	// This predictor removes the bias from the feature list
+	predictor = GLMPredictor(*featList, false);
+	isInitialized = false;
+}
+
+template<class V>
 AlignerParallel<V>::AlignerParallel(int kmer, int hSize, double t,
 		double e, // @suppress("Class members should be properly initialized")
 		bool f, double *compList, ITransformer *transformer, std::string d,
-		int tNum, std::string oFile) {
+		int tNum, int64_t maxLength, std::string oFile, std::string mFile) {
 	k = kmer;
 	histSize = hSize;
 	threshold = t;
 	// error = e;
 	relaxThreshold = t - e;
+	modelFile = mFile;
 	canReportAll = f;
-	compositionList = compList;
+
 	dlm = d;
 	threadNum = tNum;
+
+	int monoHistSize = Parameters::getAlphabetSize();
+	compositionList = new double[monoHistSize];
+	for (int i = 0; i < monoHistSize; i++) {
+		compositionList[i] = compList[i];
+	}
 
 	out = std::ofstream(oFile.c_str(), std::ios::out);
 
 	kTable = new KmerHistogram<uint64_t, V>(k);
 	monoTable = new KmerHistogram<uint64_t, uint64_t>(1);
 
-	keyList = new uint8_t[histSize * k];
-	int alphaSize = Parameters::getAlphabetSize();
-	for (int c = k - 1; c >= 0; c--) {
-		for (int r = 0; r < histSize; r++) {
-			keyList[(r * k) + k - 1 - c] = (r / ((uint64_t) pow(alphaSize, c)))
-					% alphaSize;
-		}
-	}
+	keyList = Util::makeKeyList(histSize, k);
 
 	auto featList = transformer->getFeatureList();
+
+	// Save model if desired
+	if (!modelFile.empty()) {
+		Serializer serializer(&featList, compositionList, k, histSize, e,
+				maxLength, modelFile);
+	}
+
 	featNum = featList.size() - 1; // The bias has not been removed yet.
 	for (auto f : featList) {
 		if (f->getNumOfComp() == 0 && f->getName().compare("constant") != 0) {
@@ -79,6 +136,7 @@ AlignerParallel<V>::~AlignerParallel() {
 		clearAMemory(kHistList, monoHistList, infoList, lenList, sizeA);
 	}
 
+	delete[] compositionList;
 	delete kTable;
 	delete monoTable;
 	delete[] keyList;
@@ -183,7 +241,7 @@ void AlignerParallel<V>::setBlockA(Block *block, bool isAllVsAll) {
 }
 
 /**
- * This method calculate the k-mer histograms and the mono
+ * This method calculates the k-mer histograms and the mono
  * histograms. It frees memory used by the sequences
  * stored in the block.
  */

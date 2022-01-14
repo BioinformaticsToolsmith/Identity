@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -22,14 +22,18 @@
 
 #include "ReaderAlignerCoordinator.h"
 
-ReaderAlignerCoordinator::ReaderAlignerCoordinator(int workerNumIn,
-		int blockSizeIn, char m, double t, bool r, bool a) {
+ReaderAlignerCoordinator::ReaderAlignerCoordinator(
+		int workerNumIn, // @suppress("Class members should be properly initialized")
+		int blockSizeIn, double t, bool r, bool a, bool s, bool f,
+		std::string file) {
 	workerNum = workerNumIn;
 	blockSize = blockSizeIn;
-	mode = m;
 	threshold = t;
 	canRelax = r;
 	canReportAll = a;
+	canSaveModel = s;
+	canFillModel = f;
+	modelFile = file;
 }
 
 ReaderAlignerCoordinator::~ReaderAlignerCoordinator() {
@@ -49,84 +53,127 @@ void ReaderAlignerCoordinator::alignQueryVsAll(string fileDb, string fileQry,
 void ReaderAlignerCoordinator::alignFileVsFile1(string fileDb, string fileQry,
 		string fileOut, string dlm, bool isAllVsAll) {
 
-	DataGenerator *g;
-	if (isAllVsAll) {
-		g = new SynDataGenerator(fileDb, threshold, workerNum);
-	} else {
-		g = new SynDataGenerator(fileDb, fileQry, threshold, workerNum);
-	}
+	if (canFillModel) {
+		Serializer serializer(modelFile);
+		int64_t maxLength = serializer.getMaxLength();
+		int hSize = serializer.getHistSize();
+		int k = serializer.getK();
+		double error = serializer.getAbsError();
+		// Determine histogram data type
+		if (maxLength <= std::numeric_limits<int8_t>::max()) {
+			AlignerParallel<int8_t> aligner(serializer, threshold, canReportAll,
+					dlm, workerNum, fileOut);
+			helper1<int8_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, aligner);
+		} else if (maxLength <= std::numeric_limits<int16_t>::max()) {
+			AlignerParallel<int16_t> aligner(serializer, threshold,
+					canReportAll, dlm, workerNum, fileOut);
+			helper1<int16_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		} else if (maxLength <= std::numeric_limits<int32_t>::max()) {
+			AlignerParallel<int32_t> aligner(serializer, threshold,
+					canReportAll, dlm, workerNum, fileOut);
+			helper1<int32_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		} else if (maxLength <= std::numeric_limits<int64_t>::max()) {
+			AlignerParallel<int64_t> aligner(serializer, threshold,
+					canReportAll, dlm, workerNum, fileOut);
+			helper1<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		} else {
+			std::cout << "ReaderAlignerCoordinator warning: ";
+			std::cout << "Overflow is possible however unlikely.";
+			std::cout << std::endl;
+			std::cout << "A histogram entry is 64 bits." << std::endl;
 
-	int64_t maxLength = g->getMaxLength();
-
-	// Determine histogram data type
-	if (maxLength <= std::numeric_limits<int8_t>::max()) {
-		helper<int8_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g);
-	} else if (maxLength <= std::numeric_limits<int16_t>::max()) {
-		helper<int16_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g);
-	} else if (maxLength <= std::numeric_limits<int32_t>::max()) {
-		helper<int32_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g);
-	} else if (maxLength <= std::numeric_limits<int64_t>::max()) {
-		helper<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g);
+			AlignerParallel<int64_t> aligner(serializer, threshold,
+					canReportAll, dlm, workerNum, fileOut);
+			helper1<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		}
 	} else {
-		std::cout << "ReaderAlignerCoordinator warning: ";
-		std::cout << "Overflow is possible however unlikely.";
-		std::cout << std::endl;
-		std::cout << "A histogram entry is 64 bits." << std::endl;
-		helper<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g);
+		DataGenerator *g = nullptr;
+		if (isAllVsAll) {
+			g = new SynDataGenerator(fileDb, threshold, workerNum);
+		} else {
+			g = new SynDataGenerator(fileDb, fileQry, threshold, workerNum);
+		}
+		int64_t maxLength = g->getMaxLength();
+		int hSize = g->getHistogramSize();
+		int k = g->getK();
+		// If regression alone, it must learn the entire function not part of it.
+		// That is why no threshold, i.e. threshold = 0.
+		GLMRegressor r(g->getFeatures(), g->getLabels(), 0.0, workerNum, k);
+		r.start();
+		double error = r.getAbsError();
+		// Free memory used by the training and the validation data
+		g->clearData();
+		if (canRelax) {
+			std::cout << "Relaxing the threshold by " << error << std::endl;
+		} else {
+			error = 0.0;
+		}
+
+		ITransformer *t = &r;
+		// Determine histogram data type
+		if (maxLength <= std::numeric_limits<int8_t>::max()) {
+			AlignerParallel<int8_t> aligner(k, hSize, threshold, error,
+					canReportAll, g->getCompositionList(), t, dlm, workerNum,
+					maxLength, fileOut, modelFile);
+			helper1<int8_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, aligner);
+		} else if (maxLength <= std::numeric_limits<int16_t>::max()) {
+			AlignerParallel<int16_t> aligner(k, hSize, threshold, error,
+					canReportAll, g->getCompositionList(), t, dlm, workerNum,
+					maxLength, fileOut, modelFile);
+			helper1<int16_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		} else if (maxLength <= std::numeric_limits<int32_t>::max()) {
+			AlignerParallel<int32_t> aligner(k, hSize, threshold, error,
+					canReportAll, g->getCompositionList(), t, dlm, workerNum,
+					maxLength, fileOut, modelFile);
+			helper1<int32_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		} else if (maxLength <= std::numeric_limits<int64_t>::max()) {
+			AlignerParallel<int64_t> aligner(k, hSize, threshold, error,
+					canReportAll, g->getCompositionList(), t, dlm, workerNum,
+					maxLength, fileOut, modelFile);
+			helper1<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		} else {
+			std::cout << "ReaderAlignerCoordinator warning: ";
+			std::cout << "Overflow is possible however unlikely.";
+			std::cout << std::endl;
+			std::cout << "A histogram entry is 64 bits." << std::endl;
+
+			AlignerParallel<int64_t> aligner(k, hSize, threshold, error,
+					canReportAll, g->getCompositionList(), t, dlm, workerNum,
+					maxLength, fileOut, modelFile);
+			helper1<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll,
+					aligner);
+		}
+
+		delete g;
 	}
 }
 
 template<class V>
-void ReaderAlignerCoordinator::helper(string fileDb, string fileQry,
-		string fileOut, string dlm, bool isAllVsAll, DataGenerator *g) {
+void ReaderAlignerCoordinator::helper1(string fileDb, string fileQry,
+		string fileOut, string dlm, bool isAllVsAll,
+		AlignerParallel<V> &aligner) {
 
-	int hSize = g->getHistogramSize();
-	int k = g->getK();
-
-	ITransformer *t;
-	double error = 0.0;
-	switch (mode) {
-	case C: {
-		std::cout << "Mode is classification." << std::endl;
-		GLMClassifier *c = new GLMClassifier(g->getFeatures(), g->getLabels(),
-				threshold, workerNum, k);
-		c->start();
-		t = c;
+	/**
+	 * If the output file is not provided, identity is used in the training mode only
+	 */
+	if (fileOut.empty()) {
+		std::cout << "Training is done." << std::endl;
+		return;
 	}
-		break;
-	case R: {
-		std::cout << "Mode is regression." << std::endl;
-		// If regression alone, it must learn the entire function not part of it.
-		// That is why no threshold, i.e. threshold = 0.
-		GLMRegressor *r = new GLMRegressor(g->getFeatures(), g->getLabels(),
-				0.0, workerNum, k);
-		r->start();
-		error = r->getAbsError();
-		t = r;
-	}
-		break;
-	default:
-		std::cerr << "ReaderAlignerCoordinator error: Invalid mode.";
-		std::cerr << std::endl;
-		throw std::exception();
-	}
-
-	if (canRelax) {
-		std::cout << "Relaxing the threshold by " << error << std::endl;
-	} else {
-		error = 0.0;
-	}
-
-	// Free memory used by the training and the validation data
-	g->clearData();
 
 	std::cout
 			<< "Calculating the identity scores. This step may take long time ..."
 			<< std::endl;
 
 	FastaReader qryReader(fileQry, blockSize);
-	AlignerParallel<V> aligner(k, hSize, threshold, error, canReportAll,
-			g->getCompositionList(), t, dlm, workerNum, fileOut);
+
 	if (isAllVsAll) {
 		// Process the first block versus itself.
 		aligner.setBlockA(qryReader.read(), isAllVsAll);
@@ -227,70 +274,187 @@ void ReaderAlignerCoordinator::helper(string fileDb, string fileQry,
 			}
 		}
 	}
-
-	delete g;
-	delete t;
 }
 
 void ReaderAlignerCoordinator::alignFileVsFile2(string fileDb, string fileQry,
 		string fileOut, string dlm, bool isAllVsAll) {
-	DataGenerator *g;
-	if (isAllVsAll) {
-		g = new SynDataGenerator(fileDb, threshold, workerNum);
+	DataGenerator *g = nullptr;
+	Serializer *serializer = nullptr;
+	int64_t maxLength;
+	if (canFillModel) {
+		serializer = new Serializer(modelFile);
+		maxLength = serializer->getMaxLength();
 	} else {
-		g = new SynDataGenerator(fileDb, fileQry, threshold, workerNum);
-	}
-
-	// Make the keyList in digital format once
-	int alphaSize = Parameters::getAlphabetSize();
-	int histogramSize = g->getHistogramSize();
-	int k = g->getK();
-	uint8_t keyList[histogramSize * k];
-	for (int c = k - 1; c >= 0; c--) {
-		for (int r = 0; r < histogramSize; r++) {
-			keyList[(r * k) + k - 1 - c] = (r / ((uint64_t) pow(alphaSize, c)))
-					% alphaSize;
+		if (isAllVsAll) {
+			g = new SynDataGenerator(fileDb, threshold, workerNum);
+		} else {
+			g = new SynDataGenerator(fileDb, fileQry, threshold, workerNum);
 		}
+		maxLength = g->getMaxLength();
 	}
 
-	ITransformer *t;
-	double error = 0.0;
-	switch (mode) {
-	case C: {
-		std::cout << "Mode is classification." << std::endl;
-		GLMClassifier *c = new GLMClassifier(g->getFeatures(), g->getLabels(),
-				threshold, workerNum, k);
-		c->start();
-		t = c;
+	// Determine histogram data type
+	if (maxLength <= std::numeric_limits<int8_t>::max()) {
+		helper2<int8_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g,
+				serializer);
+	} else if (maxLength <= std::numeric_limits<int16_t>::max()) {
+		helper2<int16_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g,
+				serializer);
+	} else if (maxLength <= std::numeric_limits<int32_t>::max()) {
+		helper2<int32_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g,
+				serializer);
+	} else if (maxLength <= std::numeric_limits<int64_t>::max()) {
+		helper2<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g,
+				serializer);
+	} else {
+		std::cout << "ReaderAlignerCoordinator warning: ";
+		std::cout << "Overflow is possible however unlikely.";
+		std::cout << std::endl;
+		std::cout << "A histogram entry is 64 bits." << std::endl;
+		helper2<int64_t>(fileDb, fileQry, fileOut, dlm, isAllVsAll, g,
+				serializer);
 	}
-		break;
-	case R: {
-		std::cout << "Mode is regression." << std::endl;
-		// If regression alone, it must learn the entire function not part of it.
-		// That is why no threshold, i.e. threshold = 0.
-		GLMRegressor *r = new GLMRegressor(g->getFeatures(), g->getLabels(),
-				0.0, workerNum, k);
-		r->start();
-		error = r->getAbsError();
-		t = r;
+
+	if (g != nullptr) {
+		delete g;
 	}
-		break;
-	default:
-		std::cerr << "ReaderAlignerCoordinator error: Invalid mode.";
-		std::cerr << std::endl;
-		throw std::exception();
+	if (serializer != nullptr) {
+		delete serializer;
+	}
+}
+
+/**
+ * Not for all versus all
+ * Simple, wrote it to avoid the bug that showed when running identity on a small number of sequences
+ */
+template<class V>
+void ReaderAlignerCoordinator::helper2_simple(string fileDb, string fileQry,
+		string fileOut, string dlm, bool isAllVsAll, DataGenerator *g,
+		Serializer *serializer) {
+
+	bool canSkip = !canReportAll;
+
+	IdentityCalculator<V> *id;
+	if (canFillModel) {
+		id = new IdentityCalculator<V>(*serializer, threshold, canSkip,
+				canRelax);
+	} else if (canSaveModel) {
+		id = new IdentityCalculator<V>(g, workerNum, threshold, canSkip,
+				canRelax, modelFile);
+	} else {
+		id = new IdentityCalculator<V>(g, workerNum, threshold, canSkip,
+				canRelax);
+	}
+
+	/**
+	 * If the output file is not provided, identity is used in the training mode only
+	 */
+	if (fileOut.empty()) {
+		std::cout << "Training is done." << std::endl;
+		return;
 	}
 
 	if (canRelax) {
-		std::cout << "Relaxing the threshold by " << error << std::endl;
-	} else {
-		error = 0.0;
+		std::cout << "Relaxing the threshold" << std::endl;
 	}
 
-	// Free memory used by the training and the validation data
-	g->clearData();
+	std::cout << "Calculating the identity scores. ";
+	std::cout << "This step may take long time ..." << std::endl;
 
-	// Make sure you have one thread for reading
+	if (!isAllVsAll) {
+		string temp(fileDb);
+		fileDb = fileQry;
+		fileQry = temp;
+	}
+
+	// Construct a database reader.
+	FastaReader dbReader(fileDb, blockSize);
+
+	// Open output file
+	std::ofstream out(fileOut.c_str(), std::ios::out);
+
+	while (dbReader.isStillReading()) {
+		// Read a database block.
+		Block *dbBlock = dbReader.read();
+		int dbSize = dbBlock->size();
+		auto dbTuble = id->unpackBlock(dbBlock, workerNum);
+		V **dbKHistList = get<0>(dbTuble);
+		uint64_t **dbMonoHistList = get<1>(dbTuble);
+		std::string **dbInfoList = get<2>(dbTuble);
+		int *dbLenList = get<3>(dbTuble);
+
+		// Construct a query reader
+		FastaReader qryReader(fileQry, blockSize);
+		while (qryReader.isStillReading()) {
+			// Read a query block
+			Block *qryBlock = qryReader.read();		// Destroyed by the aligner
+			int qrySize = qryBlock->size();
+			auto qryTuble = id->unpackBlock(qryBlock, workerNum);
+			V **qryKHistList = get<0>(qryTuble);
+			uint64_t **qryMonoHistList = get<1>(qryTuble);
+			std::string **qryInfoList = get<2>(qryTuble);
+			int *qryLenList = get<3>(qryTuble);
+
+			for (int i = 0; i < dbSize; i++) {
+				std::string dbSeq = *dbInfoList[i];
+				double *v = id->score(dbKHistList[i], qryKHistList,
+						dbMonoHistList[i], qryMonoHistList, qrySize, workerNum,
+						dbLenList[i], qryLenList);
+
+				for (int j = 0; j < qrySize; j++) {
+					if (v[j] > 0.0) {
+						out << dbSeq << "\t" << *qryInfoList[j] << "\t" << v[j]
+								<< std::endl;
+					}
+				}
+				delete[] v;
+			}
+			// Free query block
+			id->freeBlock(qryTuble, qrySize, workerNum);
+		}
+		// Free database block
+		id->freeBlock(dbTuble, dbSize, workerNum);
+	}
+	cout << endl;
+
+	// Close output file.
+	out.flush();
+	out.close();
+	delete id;
+}
+
+template<class V>
+void ReaderAlignerCoordinator::helper2(string fileDb, string fileQry,
+		string fileOut, string dlm, bool isAllVsAll, DataGenerator *g,
+		Serializer *serializer) {
+
+	bool canSkip = !canReportAll;
+
+	IdentityCalculator<V> *id;
+	if (canFillModel) {
+		id = new IdentityCalculator<V>(*serializer, threshold, canSkip,
+				canRelax);
+	} else if (canSaveModel) {
+		id = new IdentityCalculator<V>(g, workerNum, threshold, canSkip,
+				canRelax, modelFile);
+	} else {
+		id = new IdentityCalculator<V>(g, workerNum, threshold, canSkip,
+				canRelax);
+	}
+
+	/**
+	 * If the output file is not provided, identity is used in the training mode only
+	 */
+	if (fileOut.empty()) {
+		std::cout << "Training is done." << std::endl;
+		return;
+	}
+
+	if (canRelax) {
+		std::cout << "Relaxing the threshold" << std::endl;
+	}
+
+// Make sure you have one thread for reading
 	workerNum--;
 
 	std::cout
@@ -303,10 +467,10 @@ void ReaderAlignerCoordinator::alignFileVsFile2(string fileDb, string fileQry,
 		fileQry = temp;
 	}
 
-	// Construct a database reader.
+// Construct a database reader.
 	FastaReader dbReader(fileDb, blockSize);
 
-	// Open output file
+// Open output file
 	std::ofstream out(fileOut.c_str(), std::ios::out);
 
 	while (dbReader.isStillReading()) {
@@ -341,13 +505,13 @@ void ReaderAlignerCoordinator::alignFileVsFile2(string fileDb, string fileQry,
 		Block *dbBlock = dbReader.read();
 
 		// Start concurrent aligner tasks
-		vector<Aligner*> alignerList;
+		vector<Aligner<V>*> alignerList;
 		alignerList.reserve(workerNum);
 		vector<future<std::pair<bool, stringstream*> > > futureList;
 		futureList.reserve(workerNum);
 		for (int i = 0; i < workerNum; i++) {
-			Aligner *aligner = new Aligner(g, t, dbBlock, dlm, canReportAll, threshold,
-					error, keyList);
+			Aligner<V> *aligner = new Aligner<V>(*id, dbBlock, dlm,
+					canReportAll, threshold, canRelax);
 			alignerList.push_back(aligner);
 			futureList.push_back(
 					std::async([aligner]() -> std::pair<bool, stringstream*> {
@@ -395,9 +559,8 @@ void ReaderAlignerCoordinator::alignFileVsFile2(string fileDb, string fileQry,
 	}
 	cout << endl;
 
-	// Close output file.
+// Close output file.
+	out.flush();
 	out.close();
-
-	delete g;
-	delete t;
+	delete id;
 }

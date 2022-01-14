@@ -5,7 +5,6 @@
  * Modified on: 12/21/2019
  * Author: Hani Zakaria Girgis, PhD
  */
-
 template<class I, class V>
 KmerHistogram<I, V>::KmerHistogram(int keyLength) :
 		k(keyLength) {
@@ -24,13 +23,13 @@ KmerHistogram<I, V>::KmerHistogram(int keyLength) :
 	digitList['G'] = 3;
 
 	// Initialize bases
-	bases = new I[k];
+	// bases = new I[k];
 	for (int i = k - 1; i >= 0; i--) {
 		bases[k - 1 - i] = (I) pow(4.0, i);
 	}
 
 	// Initialize mMinusOne
-	mMinusOne = new I[4];
+	// mMinusOne = new I[4];
 	for (int i = 0; i < 4; i++) {
 		mMinusOne[i] = i * bases[0];
 	}
@@ -45,8 +44,8 @@ KmerHistogram<I, V>::KmerHistogram(int keyLength) :
 
 template<class I, class V>
 KmerHistogram<I, V>::~KmerHistogram() {
-	delete[] bases;
-	delete[] mMinusOne;
+	// delete[] bases;
+	// delete[] mMinusOne;
 }
 
 /**
@@ -120,7 +119,9 @@ V* KmerHistogram<I, V>::build(const string *sequence) {
 	}
 	// Post condition
 	if (segmentList.empty()) {
-		cerr << "At least one valid segment is required." << endl;
+		cerr << "KmerHistogram: At least one valid segment is required.";
+		cerr << endl;
+		cerr << "Sequence: " << *sequence << std::endl;
 		throw std::exception();
 	}
 

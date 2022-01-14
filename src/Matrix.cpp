@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -19,18 +19,6 @@
  * Created on: May 10, 2017
  * Rewritten on: April 15, 2020 By Dr. Hani Z. Girgis, The Bioinformatics Toolsmith Laboratory
  * Author: Robert Geraghty, The Bioinformatics Toolsmith Laboratory
- *
- * ToDo:
- * [OK] Test the inverse on this matrix https://www.mathsisfun.com/algebra/matrix-inverse-row-operations-gauss-jordan.html
- * [OK] Review gaussJordanInverse()
- * [OK] Add empty constructor
- *
- * [OK] Make sure that there is no memory leak, specially when we construct a matrix and return it from a method.
- * [OK] Stop using indexOf because it depends on the column size of a matrix.
- * [OK] Define another method similar to at() but does not check boundaries.
- *
- *
- * [  ] Make it a template class using float? Not sure if it wall affect precision
  */
 
 #include "Matrix.h"
@@ -42,19 +30,33 @@ Matrix::Matrix() :
 
 Matrix::Matrix(int r, int c, double init) :
 		numRow(r), numCol(c) {
-	int size = r * c;
+	int64_t size = r * c;
+
+	if (size > INT_MAX) {
+		std::cerr << "Cannot build this matrix because it is too big.";
+		std::cerr << std::endl;
+		throw std::exception();
+	}
+
 	m = new double[size];
-	for (int i = 0; i < size; i++) {
+	for (int64_t i = 0; i < size; i++) {
 		m[i] = init;
 	}
 }
 
 Matrix::Matrix(const Matrix &o) :
 		numRow(o.getNumRow()), numCol(o.getNumCol()) {
-	int size = numRow * numCol;
+	int64_t size = numRow * numCol;
+
+	if (size > INT_MAX) {
+		std::cerr << "Cannot build this matrix because it is too big.";
+		std::cerr << std::endl;
+		throw std::exception();
+	}
+
 	m = new double[size];
 	const double *n = o.getArray();
-	for (int i = 0; i < size; i++) {
+	for (int64_t i = 0; i < size; i++) {
 		m[i] = n[i];
 	}
 }
@@ -62,13 +64,19 @@ Matrix::Matrix(const Matrix &o) :
 Matrix& Matrix::operator=(const Matrix &o) {
 	numRow = o.getNumRow();
 	numCol = o.getNumCol();
-	int size = numRow * numCol;
+	int64_t size = numRow * numCol;
+
+	if (size > INT_MAX) {
+		std::cerr << "Cannot build this matrix because it is too big.";
+		std::cerr << std::endl;
+		throw std::exception();
+	}
+
 	m = new double[size];
 	const double *n = o.getArray();
 	for (int i = 0; i < size; i++) {
 		m[i] = n[i];
 	}
-
 	return *this;
 }
 
@@ -79,6 +87,10 @@ Matrix::Matrix(Matrix &&o) :
 }
 
 Matrix::~Matrix() {
+	clearData();
+}
+
+void Matrix::clearData() {
 	if (m != nullptr) {
 		delete[] m;
 		m = nullptr;

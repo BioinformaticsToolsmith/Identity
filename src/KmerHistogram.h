@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
+#include <tuple>
 
 #include "Parameters.h"
 
@@ -31,11 +32,9 @@ protected:
 
 private:
 	// [4^0, 4^1, ... , 4^(k-1)]
-	I *bases;
-	I *mMinusOne;
-	void initialize(int, V);
-
-	int digitList['T'+1];
+	I bases[maxKeyLength];
+	I mMinusOne[4];
+	int digitList['T' + 1];
 
 public:
 	/* Methods */

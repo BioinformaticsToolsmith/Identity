@@ -19,6 +19,7 @@ size_t LockFreeQueue<T,N>::size() const {
 template<class T, size_t N>
 void LockFreeQueue<T,N>::push(const T& t){
 	if(size_.load() >= N){
+		std::cerr << size_.load() << std::endl;
 		throw std::overflow_error("LockFreeQueue error: Queue is full.");
 	}
 	buffer_[write_pos_] = t;

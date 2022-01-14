@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -23,51 +23,30 @@
  *
  */
 
-#include "Aligner.h"
-
 /**
  * Block a will NOT be deleted here because it is
  * being processed by other threads as well.
  */
-Aligner::Aligner(DataGenerator *d, ITransformer *t, Block *a, string dlmIn,
-		bool filter, double cutoff, double e, uint8_t *keyListIn) {
+template<class V>
+Aligner<V>::Aligner(IdentityCalculator<V> &c, Block *a, string dlmIn,
+		bool filter, double cutoff, bool canRelax) :
+		identity(c) {
 	blockA = a;
 	dlm = dlmIn;
-	id = t;
 	threshold = cutoff;
-	error = e;
-	keyList = keyListIn;
-
-	histogramSize = d->getHistogramSize();
-	k = d->getK();
-	maxLength = d->getMaxLength();
-	compositionList = d->getCompositionList();
-
-	int alphaSize = Parameters::getAlphabetSize();
-
-	auto featList = t->getFeatureList();
-	featNum = featList.size() - 1; // The bias has not been removed yet.
-	for (auto f : featList) {
-		if (f->getNumOfComp() == 0 && f->getName().compare("constant") != 0) {
-			funIndexList.push_back(f->getFunIndex());
-		}
-	}
-	singleFeatNum = funIndexList.size();
-	funIndexArray = funIndexList.data();
-	// This predictor removes the bias from the feature list
-	predictor = GLMPredictor(featList, false);
-	// featList is not needed beyond this point
-	for (auto f : featList) {
-		delete f;
-	}
-	featList.clear();
 
 	canReportAll = filter;
-
 	ssPtr = new stringstream();
+
+	if (canRelax) {
+		error = identity.getError();
+	}
+
+	k = identity.getK();
 }
 
-Aligner::~Aligner() {
+template<class V>
+Aligner<V>::~Aligner() {
 	delete ssPtr;
 
 	if (buffer.size() > 0) {
@@ -76,7 +55,8 @@ Aligner::~Aligner() {
 	}
 }
 
-pair<bool, stringstream*> Aligner::start() {
+template<class V>
+pair<bool, stringstream*> Aligner<V>::start() {
 	// Keep processing blocks as they are enqueued.
 	while (true) {
 		if (buffer.size() > 0) {
@@ -89,38 +69,29 @@ pair<bool, stringstream*> Aligner::start() {
 	return std::make_pair(canWrite, ssPtr);
 }
 
+template<class V>
+pair<bool, stringstream*> Aligner<V>::getResults() {
+	// Keep processing blocks as they are enqueued.
+	return std::make_pair(canWrite, ssPtr);
+}
+
 /**
  * Thread safe
  * Note: This block and its contents will be deleted
  * after processing it.
  */
-void Aligner::enqueueBlock(pair<Block*, bool> p) {
+template<class V>
+void Aligner<V>::enqueueBlock(pair<Block*, bool> p) {
 	buffer.push(p);
-}
-
-void Aligner::processBlock() {
-	// Determine histogram data type
-	if (maxLength <= std::numeric_limits<int8_t>::max()) {
-		processBlockHelper<int8_t>();
-	} else if (maxLength <= std::numeric_limits<int16_t>::max()) {
-		processBlockHelper<int16_t>();
-	} else if (maxLength <= std::numeric_limits<int32_t>::max()) {
-		processBlockHelper<int32_t>();
-	} else if (maxLength <= std::numeric_limits<int64_t>::max()) {
-		processBlockHelper<int64_t>();
-	} else {
-		std::cout << "Aligner warning: Overflow is possible however unlikely.";
-		std::cout << std::endl;
-		std::cout << "A histogram entry is 64 bits." << std::endl;
-		processBlockHelper<int64_t>();
-	}
 }
 
 /**
  * Thread safe
+ * Block A: Query
+ * Block B: Database
  */
 template<class V>
-void Aligner::processBlockHelper() {
+void Aligner<V>::processBlock() {
 	// Get the front of the the queue, but do not pop it yet.
 	auto blockB = buffer.front().first;
 	int sizeA = blockA->size();
@@ -136,7 +107,43 @@ void Aligner::processBlockHelper() {
 			init = j + 1;
 		}
 		auto p1 = blockA->at(j);
-		alignSeqVsBlock(p1.first, p1.second, blockB, kTable, monoTable, init);
+
+		string *info1 = p1.first;
+		string *seq1 = p1.second;
+
+		V *h1 = kTable.build(seq1);
+		uint64_t *mono1 = monoTable.build(seq1);
+
+		double l1 = seq1->size();
+		int sizeB = blockB->size();
+
+		for (int hani = init; hani < sizeB; hani++) {
+			auto p2 = blockB->at(hani);
+			string *seq2 = p2.second;
+			int l2 = seq2->size();
+
+			double ratio = l1 < l2 ? l1 / l2 : l2 / l1;
+			if (!canReportAll && ratio < threshold) {
+				continue;
+			}
+
+			V *h2 = kTable.build(seq2);
+			uint64_t *mono2 = monoTable.build(seq2);
+
+			double res = identity.score(h1, h2, mono1, mono2, ratio, l1, l2);
+
+			if (canReportAll || res > 0.0) {
+				canWrite = true;
+				(*ssPtr) << *info1 << dlm << *p2.first << dlm
+						<< std::setprecision(4) << res << std::endl;
+			}
+
+			delete[] h2;
+			delete[] mono2;
+		}
+
+		delete[] h1;
+		delete[] mono1;
 	}
 
 	// Pop the block and free its memory
@@ -145,65 +152,14 @@ void Aligner::processBlockHelper() {
 }
 
 template<class V>
-void Aligner::alignSeqVsBlock(std::string *info1, std::string *seq1,
-		Block *blockB, KmerHistogram<uint64_t, V> &kTable,
-		KmerHistogram<uint64_t, uint64_t> &monoTable, int init) {
-
-	V *h1 = kTable.build(seq1);
-	uint64_t *mono1 = monoTable.build(seq1);
-
-	int l1 = seq1->size();
-	int sizeB = blockB->size();
-	double data[featNum];
-
-	for (int hani = init; hani < sizeB; hani++) {
-		auto p2 = blockB->at(hani);
-		string *seq2 = p2.second;
-		int l2 = seq2->size();
-
-		if (!canReportAll
-				&& (std::min(l1, l2) / (double) std::max(l1, l2) < threshold)) {
-			continue;
-		}
-
-		V *h2 = kTable.build(seq2);
-		uint64_t *mono2 = monoTable.build(seq2);
-
-		Statistician<V> s(histogramSize, k, h1, h2, mono1, mono2,
-				compositionList, keyList);
-
-		s.calculate(funIndexArray, singleFeatNum, data);
-
-		double res = predictor.calculateIdentity(data);
-
-		if (canReportAll || res >= threshold - error) {
-			canWrite = true;
-
-			if (res > 1.0) {
-				res = 1.0;
-			} else if (res < 0.0) {
-				res = 0.0;
-			}
-
-			(*ssPtr) << *info1 << dlm << *p2.first << dlm
-					<< std::setprecision(4) << res << std::endl;
-		}
-
-		delete[] h2;
-		delete[] mono2;
-	}
-
-	delete[] h1;
-	delete[] mono1;
-}
-
-int Aligner::getQueueSize() {
+int Aligner<V>::getQueueSize() {
 	return buffer.size();
 }
 
 /**
  * Thread safe
  */
-void Aligner::stop() {
+template<class V>
+void Aligner<V>::stop() {
 	canStop = true;
 }

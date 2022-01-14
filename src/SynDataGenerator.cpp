@@ -1,7 +1,7 @@
 /*
- Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
- Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
  Academic use: Affero General Public License version 1.
 
@@ -127,6 +127,8 @@ void SynDataGenerator::generateData() {
 
 /**
  * Build data
+ * ToDo: Add a sequence vs itself.
+ * Do not change 0.99 (to 1.0) in the loop because it would add many of the sequence versus itself.
  */
 template<class V>
 void SynDataGenerator::generateDataHelper() {
@@ -167,7 +169,7 @@ void SynDataGenerator::generateDataHelper() {
 	KmerHistogram<uint64_t, V> kTable(k);
 	KmerHistogram<uint64_t, uint64_t> monoTable(1);
 	// uint8_t keyList[histogramSize * k];
-	uint8_t * keyList = new uint8_t[histogramSize * k]; // Will be deleted at the end of this method
+	uint8_t *keyList = new uint8_t[histogramSize * k]; // Will be deleted at the end of this method
 	kTable.getKeysDigitFormat(keyList);
 	const int statNum =
 			funIndexList.empty() ?
@@ -215,9 +217,12 @@ void SynDataGenerator::generateDataHelper() {
 		// Balance around threshold
 		// Generate positive examples (identity score above the threshold)
 		for (int j = 0; j < copyNum; j++) {
-			auto pPstv = mutator.mutateSequence(
-					pstvRateList[(i * copyNum + j) % pstvRateSize]);
-
+			double mutRate = pstvRateList[(i * copyNum + j) % pstvRateSize];
+			// Add 0.5% identical pairs to the data
+			//			if (i % 2500 == 0) {
+			//				mutRate = 0.0;
+			//			}
+			auto pPstv = mutator.mutateSequence(mutRate);
 			V *h2 = kTable.build(pPstv.first);
 			uint64_t *mono2 = monoTable.build(pPstv.first);
 
@@ -266,9 +271,9 @@ void SynDataGenerator::generateDataHelper() {
 				delete[] mono2;
 			}
 		}
+
 		delete[] h1;
 		delete[] mono1;
 	}
-
-	delete [] keyList;
+	delete[] keyList;
 }

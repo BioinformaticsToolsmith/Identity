@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * GLMClassifier.cpp
@@ -98,7 +98,7 @@ pair<Matrix, std::vector<Feature*> > GLMRegressor::selectFeatures(Matrix &t4,
 		std::vector<Feature*> &f4) {
 
 	auto isNewBetter = [](double newV, double oldV) {
-		return (oldV - newV > 0.000025) ? true : false;
+		return (oldV - newV > 0.000025) ? true : false; // Original
 	};
 
 	BestFirst<GLM> selector(t4, *lTrainTable, f4, GLM::regressorFactory,
@@ -124,7 +124,11 @@ double GLMRegressor::getSqrError() const {
 
 void GLMRegressor::evaluate(Matrix &o, Matrix &p) {
 	absError = Evaluator::mae(o, p);
+	//rlxError = Evaluator::maeForMeshclust(o, p, threshold);
 	sqrError = Evaluator::mse(o, p);
+
 	std::cout << "\tMAE: " << absError << std::endl;
+	//std::cout << "\tRLX: " << rlxError << std::endl;
 	std::cout << "\tMSE: " << sqrError << std::endl;
+
 }

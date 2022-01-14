@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * FastaReader.cpp
@@ -93,6 +93,13 @@ void FastaReader::deleteBlock(Block *block) {
 }
 
 Block* FastaReader::read() {
+
+	if (!isStillReading()) {
+		std::cerr << "Cannot call read on a done FastaReader object.";
+		std::cerr << std::endl;
+		throw std::exception();
+	}
+
 	bool isFirst = true;
 	string *base = new string("");
 	string *info;
@@ -105,7 +112,7 @@ Block* FastaReader::read() {
 		getline(in, line);
 		int len = line.length();
 
-		if(line[len-1] == '\r'){
+		if (line[len - 1] == '\r') {
 			len--;
 			line.pop_back();
 		}
@@ -141,7 +148,7 @@ Block* FastaReader::read() {
 			// Convert non-traditional bases to traditional ones
 			for (int h = 0; h < len; h++) {
 				// Convert a char to upper case if needed
-				char & o = line[h];
+				char &o = line[h];
 				if (o >= 97) {
 					line[h] = o - 32;
 				}
@@ -209,4 +216,18 @@ long int FastaReader::getCurrentPos() {
 
 int FastaReader::getMaxLen() {
 	return maxLen;
+}
+
+/**
+ * Start reading from the beginning of a file
+ */
+void FastaReader::restart() {
+	currentPos = 0;
+	isDone = false;
+	in.clear();
+	in.seekg(currentPos);
+}
+
+void FastaReader::setBlockSize(int newBlockSize) {
+	blockSize = newBlockSize;
 }

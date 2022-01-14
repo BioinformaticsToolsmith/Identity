@@ -1,17 +1,17 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+ Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+ Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
-	Academic use: Affero General Public License version 1.
+ Academic use: Affero General Public License version 1.
 
-	Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
+ Any restrictions to use for-profit or non-academics: Alternative commercial license is needed.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-	Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
-*/
+ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
+ */
 
 /*
  * AlignerParallel.h
@@ -39,6 +39,8 @@
 #include "Parameters.h"
 #include "ITransformer.h"
 #include "GLMPredictor.h"
+#include "Serializer.h"
+#include "Util.h"
 
 typedef std::vector<std::pair<std::string*, std::string*> > Block;
 typedef std::vector<std::vector<pair<std::string*, double> >*> Result;
@@ -81,6 +83,8 @@ private:
 
 	std::ofstream out;
 
+	std::string modelFile;
+
 	void clearAMemory(V**, uint64_t**, std::string**, int*, int);
 	void output(std::vector<std::vector<pair<std::string*, double> >*>*,
 			std::string*);
@@ -89,7 +93,11 @@ private:
 
 public:
 	AlignerParallel(int, int, double, double, bool, double*, ITransformer*,
-			std::string, int, std::string);
+			std::string, int, int64_t, std::string, std::string modelFile = "");
+
+	AlignerParallel(Serializer &serializer, double, bool, std::string, int,
+			std::string);
+
 	virtual ~AlignerParallel();
 	int getThreadNum() const;
 	void setThreadNum(int threadNum);

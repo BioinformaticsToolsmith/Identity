@@ -1,7 +1,7 @@
 /*
-	Identity calculates DNA sequence identity scores rapidly without alignment.
+	Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
 
-	Copyright (C) 2020 Hani Z. Girgis, PhD
+	Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
 	Academic use: Affero General Public License version 1.
 
@@ -61,6 +61,8 @@ public:
 	bool isStillReading();
 	long int getCurrentPos();
 	int getMaxLen();
+	void restart();
+	void setBlockSize(int);
 };
 
 #endif /* FASTAREADER_H_ */
