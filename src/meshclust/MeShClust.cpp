@@ -25,7 +25,6 @@
 #include <thread>
 #include <algorithm>
 
-#include "GMM.h"
 #include "MeanShiftLarge.h"
 #include "../Util.h"
 #include "../FastaReader.h"
