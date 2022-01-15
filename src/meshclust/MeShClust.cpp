@@ -25,6 +25,7 @@
 #include <thread>
 #include <algorithm>
 
+#include "GMM.h"
 #include "MeanShiftLarge.h"
 #include "../Util.h"
 #include "../FastaReader.h"
@@ -327,6 +328,7 @@ vector<double> guessBandwidthOneTime(Block *block, int cores,
 		}
 	}
 
+	identity.freeBlock(tup, size, cores);
 	return vNoOnes;
 }
 
