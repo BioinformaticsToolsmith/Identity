@@ -137,6 +137,19 @@ List of parameters:
 	    (yes) or n (no).
 	-h: Optional. Print this help message.
 
+Output format:
+
+	Each line of the output file has four fields.
+	Field 1 is the cluster identifier.
+	Field 2 is the sequence identifier.
+	Field 3 is the identity score between a member sequence and the sequence representing the center of a cluster.
+	Field 4 is the status of a sequence. One of four letters (C, M, E, O) may appear in this field. C stands for 
+		the center of the cluster. M represents a member whose identity score with the center is less than or
+		equal to the threshold. E stands for extended member whose identity score with the center is less 
+		than or equal to the relaxed threshold (threshold – regression error). O stands for outside. The O 
+		letter may appear when the assign-all option is enabled (-a y); in this case a sequence is assigned to 
+		the closest center regardless of the threshold or the relaxed threshold.
+		
 Examples: 
 
 	1. To cluster sequences with a minimum identity score of 0.8
@@ -169,3 +182,6 @@ Examples:
 	8. To print the academic license
 		meshclust -l y
 
+
+ 
+		 
