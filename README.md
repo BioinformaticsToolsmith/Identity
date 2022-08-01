@@ -17,19 +17,19 @@ Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more inform
 
 Please cite the following papers: 
 
-	MeShClust: An intelligent tool for clustering DNA sequences (2018). Benjamin T. James,
-	Brian B. Luczak, and Hani Z. Girgis. Nucleic Acids Res, 46(14):e83.
+	MeShClust v3.0: High-quality clustering of DNA sequences using the mean shift algorithm 
+	and alignment-free identity scores (2022). Hani Z. Girgis, BMC Genomics, 23(1):423.
+
+	Identity: Rapid alignment-free prediction of sequence alignment identity scores using 
+	self-supervised general linear models (2021). Hani Z. Girgis, Benjamin T. James, and 
+	Brian B. Luczak. NAR Genom Bioinform, 13(1), lqab001.
 
 	A survey and evaluations of histogram-based statistics in alignment-free sequence 
 	comparison (2019). Brian B. Luczak, Benjamin T. James, and Hani Z. Girgis. Briefings 
 	in Bioinformatics, 20(4):1222–1237.
 
-	Identity: Rapid alignment-free prediction of sequence alignment identity scores using 
-	self-supervised general linear models (2021). Hani Z. Girgis, Benjamin T. James, and 
-	Brian B. Luczak. NAR Genom Bioinform, 13(1), lqab001.
-	
-	MeShClust v3.0: High-quality clustering of DNA sequences using the mean shift algorithm 
-	and alignment-free identity scores (2022). Hani Z. Girgis, BMC Genomics, 23(1):423.
+	MeShClust: An intelligent tool for clustering DNA sequences (2018). Benjamin T. James,
+	Brian B. Luczak, and Hani Z. Girgis. Nucleic Acids Res, 46(14):e83.
 
 Requirments:
 
