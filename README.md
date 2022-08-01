@@ -16,6 +16,7 @@ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information.
 
 Please cite the following papers: 
+
 	MeShClust: An intelligent tool for clustering DNA sequences (2018). Benjamin T. James,
 	Brian B. Luczak, and Hani Z. Girgis. Nucleic Acids Res, 46(14):e83.
 
