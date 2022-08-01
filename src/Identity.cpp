@@ -1,5 +1,5 @@
 /*
- Identity 2.0 calculates DNA sequence identity scores rapidly without alignment.
+ Identity calculates DNA sequence identity scores rapidly without alignment.
 
  Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
@@ -107,7 +107,7 @@ TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
 int main(int argc, char *argv[]) {
 	std::cout << std::endl;
-	std::cout << "Identity v1.2 is developed by Hani Z. Girgis, PhD."
+	std::cout << "Identity 1.2 is developed by Hani Z. Girgis, PhD."
 			<< std::endl;
 	std::cout << std::endl;
 	std::cout
@@ -134,15 +134,25 @@ int main(int argc, char *argv[]) {
 			<< "Please contact Dr. Hani Z. Girgis (hzgirgis@buffalo.edu) if you need more information."
 			<< std::endl;
 	std::cout << std::endl;
-	std::cout << "Please cite the following paper: " << std::endl;
-	std::cout << "\t"
-			<< "Identity: Rapid alignment-free prediction of sequence alignment identity scores using"
-			<< std::endl;
-	std::cout << "\t"
-			<< "self-supervised general linear models. Hani Z. Girgis, Benjamin T. James, and Brian B."
-			<< std::endl;
-	std::cout << "\t" << "Luczak. NAR GAB, 2020." << std::endl;
+	std::cout << "Please cite the following papers: " << std::endl;
 
+	std::cout << "\t" << "Identity: Rapid alignment-free prediction of sequence alignment identity scores using" << std::endl;
+	std::cout << "\t" << "self-supervised general linear models (2021). Hani Z. Girgis, Benjamin T. James, and" << std::endl;
+	std::cout << "\t" << "Brian B. Luczak. NAR Genom Bioinform, 13(1), lqab001." << std::endl;
+
+	std::cout << std::endl;
+
+	std::cout << "\t" << "A survey and evaluations of histogram-based statistics in alignment-free sequence" << std::endl;
+	std::cout << "\t" << "comparison (2019). Brian B. Luczak, Benjamin T. James, and Hani Z. Girgis. Briefings" << std::endl;
+	std::cout << "\t" << "in Bioinformatics, 20(4):1222–1237." << std::endl;
+
+//	std::cout << "\t"
+//			<< "Identity: Rapid alignment-free prediction of sequence alignment identity scores using"
+//			<< std::endl;
+//	std::cout << "\t"
+//			<< "self-supervised general linear models. Hani Z. Girgis, Benjamin T. James, and Brian B."
+//			<< std::endl;
+//	std::cout << "\t" << "Luczak. NAR GAB, 2020." << std::endl;
 	std::cout << std::endl;
 
 	if (argc == 1 || (argc == 2 && argv[1][1] == 'h')) {
