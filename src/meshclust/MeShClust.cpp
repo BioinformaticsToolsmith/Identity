@@ -1,5 +1,5 @@
 /*
- MeShClust v3.0 clusters sequences using the mean shift algorithm and alignment-free identity scores.
+ MeShClust v2.0 clusters sequences using the mean shift algorithm and alignment-free identity scores.
 
  Copyright (C) 2020-2022 Hani Z. Girgis, PhD
 
@@ -25,6 +25,7 @@
 #include <thread>
 #include <algorithm>
 
+#include "GMM.h"
 #include "MeanShiftLarge.h"
 #include "../Util.h"
 #include "../FastaReader.h"
@@ -160,8 +161,8 @@ double twoMeansAndDeviations(vector<double> &l, vector<double> &r, double f) {
 		s2 = 0.005;
 	}
 
-	//	std::cout << "Initialization: " << m1 << " " << m2 << " " << s1 << " " << s2
-	//			<< endl;
+	std::cout << "Initialization: " << m1 << " " << m2 << " " << s1 << " " << s2
+			<< endl;
 
 	vector<double> l1;
 	vector<double> l2;
@@ -181,7 +182,7 @@ double twoMeansAndDeviations(vector<double> &l, vector<double> &r, double f) {
 		}
 
 		if (l1.size() <= 1 || l2.size() <= 1) {
-			// std::cout << "Converged. " << std::endl;
+			std::cout << "Converged. " << std::endl;
 			break;
 		}
 
@@ -194,8 +195,9 @@ double twoMeansAndDeviations(vector<double> &l, vector<double> &r, double f) {
 		if (Util::isEqual(m1, history1) && Util::isEqual(m2, history2)) {
 			noChangeCounter++;
 			if (noChangeCounter == 3) {
-				//				std::cout << "Stopping because there is no change for three iterations: ";
-				//				std::cout << h << std::endl;
+				std::cout
+						<< "Stopping because there is no change for three iterations: ";
+				std::cout << h << std::endl;
 				break;
 			}
 		}
@@ -205,9 +207,9 @@ double twoMeansAndDeviations(vector<double> &l, vector<double> &r, double f) {
 
 	}
 
-	//	std::cout << m1 << " " << m2 << " " << s1 << " " << s2 << " "
-	//			<< (double) l1.size() / l.size() << " "
-	//			<< (double) l2.size() / l.size() << std::endl;
+	std::cout << m1 << " " << m2 << " " << s1 << " " << s2 << " "
+			<< (double) l1.size() / l.size() << " "
+			<< (double) l2.size() / l.size() << std::endl;
 
 	double std1 = Util::calculateSTDev(l1, m1);
 	double std2 = Util::calculateSTDev(l2, m2);
@@ -228,7 +230,7 @@ vector<double> twoMeans(vector<double> &l) {
 	double m1 = *std::min_element(l.begin(), l.end());
 	double m2 = *std::max_element(l.begin(), l.end());
 
-	// std::cout << "Initialization: " << m1 << " " << m2 << endl;
+	std::cout << "Initialization: " << m1 << " " << m2 << endl;
 
 	vector<double> l1;
 	vector<double> l2;
@@ -248,7 +250,7 @@ vector<double> twoMeans(vector<double> &l) {
 		}
 
 		if (l1.size() <= 1 || l2.size() <= 1) {
-			// std::cout << "Converged. " << std::endl;
+			std::cout << "Converged. " << std::endl;
 			break;
 		}
 
@@ -258,8 +260,9 @@ vector<double> twoMeans(vector<double> &l) {
 		if (Util::isEqual(m1, history1) && Util::isEqual(m2, history2)) {
 			noChangeCounter++;
 			if (noChangeCounter == 3) {
-				// std::cout << "Stopping because there is no change for three iterations: ";
-				// std::cout << h << std::endl;
+				std::cout
+						<< "Stopping because there is no change for three iterations: ";
+				std::cout << h << std::endl;
 				break;
 			}
 		}
@@ -268,8 +271,8 @@ vector<double> twoMeans(vector<double> &l) {
 		history2 = m2;
 	}
 
-	//	std::cout << m1 << " " << m2 << " " << (double) l1.size() / l.size() << " "
-	//			<< (double) l2.size() / l.size() << std::endl;
+	std::cout << m1 << " " << m2 << " " << (double) l1.size() / l.size() << " "
+			<< (double) l2.size() / l.size() << std::endl;
 
 	// Fill the results
 	vector<double> r(4, 0.0);
@@ -277,6 +280,8 @@ vector<double> twoMeans(vector<double> &l) {
 	r[1] = m2;
 	r[2] = Util::calculateSTDev(l1, m1);
 	r[3] = Util::calculateSTDev(l2, m2);
+	//r[4] = (double) l1.size() / l.size();
+	//r[5] = (double) l2.size() / l.size();
 	return r;
 }
 
@@ -327,7 +332,6 @@ vector<double> guessBandwidthOneTime(Block *block, int cores,
 		}
 	}
 
-	identity.freeBlock(tup, size, cores);
 	return vNoOnes;
 }
 
@@ -345,6 +349,7 @@ double guessBandwidthHelper(string dbFile, int cores, DataGenerator *g) {
 		// More than 25%
 		sigmas = 2.0;
 	}
+	std::cout << "Number of standard deviations: " << sigmas << std::endl;
 
 	// Train Identity
 	IdentityCalculator<V> identity(g, cores,
@@ -352,6 +357,7 @@ double guessBandwidthHelper(string dbFile, int cores, DataGenerator *g) {
 			false /*canRelax*/);
 
 	// Estimate on a small number of blocks
+
 	vector<double> guessList;
 
 	FastaReader reader(dbFile, Parameters::getMsBandwidthBlock());
@@ -369,10 +375,20 @@ double guessBandwidthHelper(string dbFile, int cores, DataGenerator *g) {
 			vector<double> idList = guessBandwidthOneTime<V>(block, cores,
 					identity);
 
+			/*
+			 vector<double> t = twoMeans(idList);
+			 vector<double> muList { t[0], t[1] };
+			 vector<double> sigmaList { t[2], t[3] };
+			 vector<double> phiList { t[4], t[5] };
+			 GMM gmm(idList, muList, sigmaList, phiList);
+			 gmm.print();
+			 */
+
+			//for (int k = 1; k <= 3; k++) {
 			vector<double> r = twoMeans(idList);
 			double guess = twoMeansAndDeviations(idList, r, sigmas);
-			cout << "Estimated threshold " << i << ": " << guess << endl;
 			guessList.push_back(guess);
+			//}
 		}
 	} else {
 		Block *block = reader.read();
@@ -382,9 +398,9 @@ double guessBandwidthHelper(string dbFile, int cores, DataGenerator *g) {
 		double m = Util::calculateMean(idList);
 		double std = Util::calculateSTDev(idList, m);
 		double min = *std::min_element(idList.begin(), idList.end());
-		//		cout << "Mean = " << m << endl;
-		//		cout << "STD = " << std << endl;
-		//		cout << "Min = " << min << endl;
+		cout << "Mean = " << m << endl;
+		cout << "STD = " << std << endl;
+		cout << "Min = " << min << endl;
 		double guess = m - 3.0 * std;
 		if (guess < min) {
 			guess = min;
@@ -413,13 +429,14 @@ double guessBandwidthHelper(string dbFile, int cores, DataGenerator *g) {
 	}
 
 	// For testing only
-	//	std::cout << "============================================" << std::endl;
-	//	for (double g : guessList) {
-	//		std::cout << g << std::endl;
-	//	}
+	std::cout << "============================================" << std::endl;
+	for (double g : guessList) {
+		std::cout << g << std::endl;
+	}
+	std::cout << "Final threshold: " << threshold << std::endl;
 	// End testing
-	// std::cout << "\tFinal threshold: " << threshold << std::endl;
 
+	// exit(12345);
 	return threshold;
 }
 
@@ -476,7 +493,7 @@ void start(string dbFile, int blockSize, int vBlockSize, int passNum,
 
 int main(int argc, char *argv[]) {
 	std::cout << std::endl;
-	std::cout << "MeShClust v3.0 is developed by Hani Z. Girgis, PhD."
+	std::cout << "MeShClust 2.0 is developed by Hani Z. Girgis, PhD."
 			<< std::endl;
 	std::cout << std::endl;
 	std::cout
@@ -505,26 +522,25 @@ int main(int argc, char *argv[]) {
 	std::cout << std::endl;
 	std::cout << "Please cite the following papers: " << std::endl;
 
-	std::cout << "\t"
-			<< "1. Identity: Rapid alignment-free prediction of sequence alignment identity scores using"
-			<< std::endl;
-	std::cout << "\t"
-			<< "self-supervised general linear models. Hani Z. Girgis, Benjamin T. James, and Brian B."
-			<< std::endl;
-	std::cout << "\t" << "Luczak. NAR GAB, 3(1):lqab001, 2021." << std::endl;
+	std::cout << "\t" << "MeShClust v3.0: High-quality clustering of DNA sequences using the mean shift algorithm" << std::endl;
+	std::cout << "\t" << "and alignment-free identity scores (2022). Hani Z. Girgis, BMC Genomics, 23(1):423." << std::endl;
 
-	std::cout << "\t"
-			<< "2. MeShClust: an intelligent tool for clustering DNA sequences. Benjamin T. James,"
-			<< std::endl;
-	std::cout << "\t"
-			<< "Brian B. Luczak, and Hani Z. Girgis. Nucleic Acids Res, 46(14):e83, 2018."
-			<< std::endl;
+	std::cout << std::endl;
 
-	std::cout << "\t"
-			<< "3. MeShClust v3.0: High-quality clustering of DNA sequences using the mean shift algorithm"
-			<< std::endl
-			<< "\tand alignment-free identity scores. Hani Z. Girgis. "
-			<< "A great journal. " << "2022." << std::endl;
+	std::cout << "\t" << "Identity: Rapid alignment-free prediction of sequence alignment identity scores using" << std::endl;
+	std::cout << "\t" << "self-supervised general linear models (2021). Hani Z. Girgis, Benjamin T. James, and" << std::endl;
+	std::cout << "\t" << "Brian B. Luczak. NAR Genom Bioinform, 13(1), lqab001." << std::endl;
+
+	std::cout << std::endl;
+
+	std::cout << "\t" << "A survey and evaluations of histogram-based statistics in alignment-free sequence" << std::endl;
+	std::cout << "\t" << "comparison (2019). Brian B. Luczak, Benjamin T. James, and Hani Z. Girgis. Briefings" << std::endl;
+	std::cout << "\t" << "in Bioinformatics, 20(4):1222–1237." << std::endl;
+
+	std::cout << std::endl;
+
+	std::cout << "\t" << "MeShClust: An intelligent tool for clustering DNA sequences (2018). Benjamin T. James," << std::endl;
+	std::cout << "\t" << "Brian B. Luczak, and Hani Z. Girgis. Nucleic Acids Res, 46(14):e83." << std::endl;
 
 	std::cout << std::endl;
 
@@ -534,21 +550,12 @@ int main(int argc, char *argv[]) {
 		std::cout << "\t-d: Required. Database file in FASTA format."
 				<< std::endl;
 		std::cout
-				<< "\t-o: Required. Output file. Each line has 4 tab-separated fields: cluster number, sequence header,"
-				<< std::endl;
-		std::cout
-				<< "\t    identity score with the cluster center, C/M/E/O. C/M/E/O stand for center, member, extended"
-				<< std::endl;
-		std::cout
-				<< "\t    member (threshold - regression error), outside (less than threshold). The O mark should be seen"
-				<< std::endl;
-		std::cout
-				<< "\t    when the -a y is used."
+				<< "\t-o: Required. Output file. Each line has 3 tab-separated fields (>header1    >header2    score)."
 				<< std::endl;
 
 		// Optional parameters
 		std::cout
-				<< "\t-t: Optional. Threshold identity score (between 0 & 0.99) for determining cluster membership."
+				<< "\t-t: Optional. Threshold identity score (between 0 & 0.99), below which pairs are not reported."
 				<< std::endl;
 
 		std::cout
@@ -676,19 +683,7 @@ int main(int argc, char *argv[]) {
 				<< std::endl;
 		std::cout << std::endl;
 
-		std::cout
-				<< "\t7. To cluster sequences with a minimum identity score of 0.8 and specify the number"
-				<< std::endl;
-		std::cout
-				<< "\t   of data passes (useful when the algorithm did not converge, i.e., cluster count"
-				<< std::endl;
-		std::cout << "\t   kept changing from iteration to iteration)"
-				<< std::endl;
-		std::cout << "\t\tmeshclust -d input.fa -o output.txt -t 0.8 -p 100"
-				<< std::endl;
-		std::cout << std::endl;
-
-		std::cout << "\t8. To print the academic license" << std::endl;
+		std::cout << "\t7. To print the academic license" << std::endl;
 		std::cout << "\t\tmeshclust -l y" << std::endl;
 		std::cout << std::endl;
 
@@ -896,7 +891,11 @@ int main(int argc, char *argv[]) {
 	std::cout << "Database file: " << dbFile << std::endl;
 	std::cout << "Output file: " << outFile << std::endl;
 	std::cout << "Cores: " << cores << std::endl;
-
+	/*
+	 std::cout << "Automatically relax threshold: "
+	 << (relax == 'y' ? "Yes" : "No") << std::endl;
+	 std::cout << "All vs. all: " << (qryFile.empty() ? "Yes" : "No");
+	 */
 	if (isThresholdProvided) {
 		std::cout << "Provided threshold: " << threshold << std::endl;
 	} else if (threshold == 0.0) {
@@ -956,7 +955,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "Finished." << std::endl;
 	std::cout << std::endl;
 	std::cout
-			<< "Thanks for using MeShClust v3.0. Please post any questions or problems on GitHub: "
+			<< "Thanks for using MeShClust v2.0. Please post any questions or problems on GitHub: "
 			<< std::endl;
 	std::cout
 			<< "https://github.com/BioinformaticsToolsmith/Identity or email Dr. Hani Z. Girgis."
